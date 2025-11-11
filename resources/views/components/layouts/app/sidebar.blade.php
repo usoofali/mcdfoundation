@@ -160,6 +160,7 @@
         </flux:main>
 
         @include('components.partials.flash-alerts')
+        @include('components.partials.livewire-notify-alerts')
 
         @fluxScripts
     </body>
