@@ -4,6 +4,9 @@ use App\Models\Member;
 use App\Models\Dependent;
 use App\Services\DependentService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
@@ -16,6 +19,7 @@ new class extends Component {
     public $editingDependent = null;
     public $form = [
         'name' => '',
+        'nin' => '',
         'date_of_birth' => '',
         'relationship' => '',
         'document' => null,
@@ -70,6 +74,7 @@ new class extends Component {
         $this->editingDependent = $dependent;
         $this->form = [
             'name' => $dependent->name,
+            'nin' => $dependent->nin,
             'date_of_birth' => $dependent->date_of_birth->format('Y-m-d'),
             'relationship' => $dependent->relationship,
             'document' => null,
@@ -80,8 +85,13 @@ new class extends Component {
 
     public function save(): void
     {
+        $uniqueNinRule = Rule::unique('dependents', 'nin')
+            ->whereNull('deleted_at')
+            ->ignore($this->editingDependent?->id);
+
         $this->validate([
             'form.name' => 'required|string|max:150',
+            'form.nin' => ['required', 'string', 'size:11', 'regex:/^[0-9]{11}$/', $uniqueNinRule],
             'form.date_of_birth' => 'required|date|before:today',
             'form.relationship' => 'required|in:spouse,child,parent,sibling,other',
             'form.document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
@@ -133,6 +143,7 @@ new class extends Component {
     {
         $this->form = [
             'name' => '',
+            'nin' => '',
             'date_of_birth' => '',
             'relationship' => '',
             'document' => null,
@@ -171,8 +182,8 @@ new class extends Component {
                         Manage family members for {{ $member->full_name }}
                     </flux:text>
                 </div>
-                <flux:button variant="primary" wire:click="showCreateModal" class="gap-2">
-                    <flux:icon name="user-plus" class="size-4" />
+                <flux:button icon="user-plus" variant="primary" wire:click="showCreateModal">
+                    
                     Add Dependent
                 </flux:button>
             </div>
@@ -250,6 +261,7 @@ new class extends Component {
                         <thead class="bg-neutral-50 dark:bg-neutral-900">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">NIN</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Age</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Relationship</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Eligible</th>
@@ -265,6 +277,9 @@ new class extends Component {
                                         @if($dependent->notes)
                                             <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ Str::limit($dependent->notes, 50) }}</div>
                                         @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                        {{ $dependent->nin }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
                                         {{ $dependent->age }} years
@@ -318,8 +333,8 @@ new class extends Component {
                         Get started by adding a family member.
                     </flux:text>
                     <div class="mt-6">
-                        <flux:button variant="primary" wire:click="showCreateModal" class="gap-2">
-                            <flux:icon name="user-plus" class="size-4" />
+                        <flux:button  icon="user-plus" variant="primary" wire:click="showCreateModal" class="gap-2">
+                            
                             Add Dependent
                         </flux:button>
                     </div>
@@ -332,11 +347,11 @@ new class extends Component {
     @if($showModal)
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-neutral-900/60 transition-opacity" wire:click="closeModal"></div>
+                <div class="fixed inset-0 z-40 bg-neutral-900/60 transition-opacity" wire:click="closeModal"></div>
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                <div class="inline-block w-full max-w-lg transform overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-xl transition-all dark:border-neutral-700 dark:bg-neutral-800 sm:my-8 sm:align-middle">
+                <div class="relative z-50 inline-block w-full max-w-lg transform overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-xl transition-all dark:border-neutral-700 dark:bg-neutral-800 sm:my-8 sm:align-middle">
                     <form wire:submit="save">
                         <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
@@ -352,6 +367,13 @@ new class extends Component {
                                             required 
                                             autofocus
                                         />
+
+                                        <flux:input
+                                            wire:model="form.nin"
+                                            label="National ID Number (NIN)"
+                                            placeholder="11-digit NIN"
+                                            required
+                                        />
                                         
                                         <flux:input 
                                             wire:model="form.date_of_birth" 
@@ -360,12 +382,16 @@ new class extends Component {
                                             required
                                         />
                                         
-                                        <flux:input 
-                                            wire:model="form.relationship" 
-                                            label="Relationship" 
-                                            placeholder="spouse, child, parent, sibling, other"
+                                        <flux:select
+                                            wire:model="form.relationship"
+                                            label="Relationship"
+                                            placeholder="Select relationship"
                                             required
-                                        />
+                                        >
+                                            @foreach($this->relationshipOptions as $value => $label)
+                                                <option value="{{ $value }}">{{ $label }}</option>
+                                            @endforeach
+                                        </flux:select>
                                         
                                         <flux:input 
                                             wire:model="form.document" 

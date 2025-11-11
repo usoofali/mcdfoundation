@@ -7,6 +7,7 @@ use App\Models\Member;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class DependentService
 {
@@ -152,10 +153,19 @@ class DependentService
     /**
      * Validate dependent data.
      */
-    public function validateDependentData(array $data): array
+    public function validateDependentData(array $data, ?Dependent $dependent = null): array
     {
         $rules = [
             'name' => 'required|string|max:150',
+            'nin' => [
+                'required',
+                'string',
+                'size:11',
+                'regex:/^[0-9]{11}$/',
+                Rule::unique('dependents', 'nin')
+                    ->whereNull('deleted_at')
+                    ->ignore($dependent?->id),
+            ],
             'date_of_birth' => 'required|date|before:today',
             'relationship' => 'required|in:spouse,child,parent,sibling,other',
             'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',

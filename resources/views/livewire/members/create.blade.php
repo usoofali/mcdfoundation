@@ -385,7 +385,7 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
                                 <option value="">No plan selected</option>
                                 @foreach($this->contributionPlans as $plan)
                                     <option value="{{ $plan->id }}">
-                                        {{ $plan->name }} - ₦{{ number_format($plan->amount) }} ({{ ucfirst($plan->frequency) }})
+                                        {{ $plan->label }} - ₦{{ number_format($plan->amount) }} ({{ ucfirst($plan->frequency) }})
                                     </option>
                                 @endforeach
                             </flux:select>

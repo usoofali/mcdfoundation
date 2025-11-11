@@ -15,6 +15,7 @@ class Dependent extends Model
     protected $fillable = [
         'member_id',
         'name',
+        'nin',
         'date_of_birth',
         'relationship',
         'document_path',

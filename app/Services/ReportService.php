@@ -126,7 +126,7 @@ class ReportService
                     'receipt_number' => $contribution->receipt_number,
                     'member_name' => $contribution->member->full_name,
                     'member_registration' => $contribution->member->registration_no,
-                    'plan_name' => $contribution->contributionPlan->name ?? 'N/A',
+                    'plan_name' => $contribution->contributionPlan->label ?? 'N/A',
                     'amount' => $contribution->amount,
                     'fine_amount' => $contribution->fine_amount,
                     'total_amount' => $contribution->total_amount,

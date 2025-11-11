@@ -5,7 +5,7 @@ use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app', ['title' => 'Create Contribution Plan'])] class extends Component
 {
-    public string $name = '';
+    public string $display_name = '';
     public string $description = '';
     public string $amount = '';
     public string $frequency = 'monthly';
@@ -14,15 +14,16 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution Plan'])]
     public function save(): void
     {
         $this->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:contribution_plans,name'],
+            'display_name' => ['required', 'string', 'max:255', 'unique:contribution_plans,display_name'],
             'description' => ['nullable', 'string', 'max:500'],
             'amount' => ['required', 'numeric', 'min:0'],
-            'frequency' => ['required', 'in:daily,weekly,monthly,quarterly,annual'],
+            'frequency' => ['required', 'in:daily,weekly,monthly,quarterly,annual', 'unique:contribution_plans,frequency'],
             'is_active' => ['boolean'],
         ]);
 
         ContributionPlan::create([
-            'name' => $this->name,
+            'name' => $this->frequency,
+            'display_name' => $this->display_name,
             'description' => $this->description,
             'amount' => $this->amount,
             'frequency' => $this->frequency,
@@ -59,7 +60,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution Plan'])]
                 <!-- Plan Information -->
                 <div class="grid grid-cols-1 gap-6">
                     <flux:input 
-                        wire:model="name" 
+                        wire:model="display_name" 
                         label="{{ __('Plan Name') }}" 
                         placeholder="{{ __('Enter plan name') }}"
                         required

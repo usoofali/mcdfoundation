@@ -67,6 +67,27 @@ new class extends Component {
                 </div>
             </div>
 
+            @if(auth()->user()?->member && !auth()->user()->member->is_complete)
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-5 dark:border-amber-900/40 dark:bg-amber-900/20">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex items-start gap-3">
+                            <flux:icon name="sparkles" class="size-5 text-amber-600 dark:text-amber-300" />
+                            <div class="space-y-1">
+                                <flux:heading size="sm" class="font-semibold text-amber-900 dark:text-amber-200">
+                                    Complete your registration
+                                </flux:heading>
+                                <flux:text class="text-sm text-amber-800 dark:text-amber-100">
+                                    We need a few more details to activate your membership benefits. Submit them when you’re ready.
+                                </flux:text>
+                            </div>
+                        </div>
+                        <flux:button href="{{ route('members.complete') }}" icon="arrow-right" variant="primary" class="w-full sm:w-auto" wire:navigate>
+                            Continue registration
+                        </flux:button>
+                    </div>
+                </div>
+            @endif
+
             <!-- Statistics Cards -->
             @if(!empty($dashboardData['stats']))
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -79,7 +100,7 @@ new class extends Component {
                             $iconDarkText = "dark:text-{$color}-400";
                         @endphp
                         <div class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
-                                <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3">
                                 <div class="rounded-lg {{ $iconBg }} {{ $iconDarkBg }} p-2 sm:p-3">
                                     <flux:icon name="{{ $stat['icon'] }}" class="size-5 sm:size-6 {{ $iconText }} {{ $iconDarkText }}" />
                                 </div>

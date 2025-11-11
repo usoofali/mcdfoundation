@@ -287,7 +287,7 @@ new #[Layout('components.layouts.app', ['title' => 'Member Details'])] class ext
                                         <div>
                                             <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Contribution Plan</dt>
                                             <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                                                {{ ucfirst($member->contributionPlan->name) }} - ₦{{ number_format($member->contributionPlan->amount) }}
+                                                {{ $member->contributionPlan?->label }} - ₦{{ number_format($member->contributionPlan->amount) }}
                                             </dd>
                                         </div>
                                     @endif

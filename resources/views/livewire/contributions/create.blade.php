@@ -111,7 +111,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
 
     public function getContributionPlansProperty()
     {
-        return ContributionPlan::where('active', true)->orderBy('name')->get();
+        return ContributionPlan::where('is_active', true)->orderBy('name')->get();
     }
 
     public function getPaymentMethodOptionsProperty()
@@ -195,7 +195,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
                     
                     @if($selectedPlan)
                         <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div class="font-medium text-blue-800">{{ ucfirst($selectedPlan->name) }} Plan</div>
+                            <div class="font-medium text-blue-800">{{ $selectedPlan->label }} Plan</div>
                             <div class="text-sm text-blue-600">Amount: ₦{{ number_format($selectedPlan->amount, 2) }}</div>
                             @if($selectedPlan->description)
                                 <div class="text-sm text-blue-600 mt-1">{{ $selectedPlan->description }}</div>

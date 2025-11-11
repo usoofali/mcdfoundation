@@ -23,6 +23,7 @@ class DependentFactory extends Factory
         return [
             'member_id' => Member::factory(),
             'name' => fake()->name(),
+            'nin' => fake()->unique()->numerify(str_repeat('#', 11)),
             'date_of_birth' => $dateOfBirth,
             'relationship' => $relationship,
             'document_path' => fake()->optional(0.3)->filePath(),

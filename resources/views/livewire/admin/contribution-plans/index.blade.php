@@ -52,8 +52,8 @@ new class extends Component
 <x-slot name="header">
     <div class="flex items-center justify-between">
         <h2 class="leading-tight text-xl font-semibold text-gray-900 dark:text-white">{{ __('Contribution Plans') }}</h2>
-        <flux:button :href="route('admin.contribution-plans.create')" primary wire:navigate class="gap-2">
-            <flux:icon name="plus-circle" class="size-4" />
+        <flux:button icon="plus-circle" :href="route('admin.contribution-plans.create')" primary wire:navigate class="gap-2">
+            
             {{ __('Create New Plan') }}
         </flux:button>
     </div>
@@ -105,13 +105,13 @@ new class extends Component
                                             <div class="h-10 w-10 flex-shrink-0">
                                                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
                                                     <span class="text-sm font-medium text-green-700 dark:text-green-200">
-                                                        {{ substr($plan->name, 0, 2) }}
+                                                        {{ substr($plan->label, 0, 2) }}
                                                     </span>
                                                 </div>
                                             </div>
                                             <div class="min-w-0">
                                                 <div class="text-sm font-medium text-neutral-900 dark:text-white">
-                                                    {{ $plan->name }}
+                                                    {{ $plan->label }}
                                                 </div>
                                                 <div class="text-sm text-neutral-500 dark:text-neutral-400">
                                                     {{ $plan->description ?? 'No description' }}

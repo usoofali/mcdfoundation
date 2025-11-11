@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Lga;
+use App\Models\State;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,16 +20,36 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
+        $state = State::factory()->create();
+        $lga = Lga::factory()->create(['state_id' => $state->id]);
+
         $response = $this->post(route('register.store'), [
-            'name' => 'John Doe',
+            'full_name' => 'John',
+            'family_name' => 'Doe',
+            'marital_status' => 'single',
+            'date_of_birth' => now()->subYears(30)->toDateString(),
+            'nin' => '12345678901',
+            'hometown' => 'Enugu',
+            'phone' => '+2348000000000',
             'email' => 'test@example.com',
+            'state_id' => $state->id,
+            'lga_id' => $lga->id,
+            'address' => '123 Test Street',
+            'occupation' => 'Engineer',
+            'workplace' => 'Acme Corp',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
 
         $response->assertSessionHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('members.complete', absolute: false));
 
         $this->assertAuthenticated();
+
+        $this->assertDatabaseHas('members', [
+            'nin' => '12345678901',
+            'status' => 'pre_registered',
+            'is_complete' => false,
+        ]);
     }
 }

@@ -461,7 +461,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                             <flux:select wire:model="contribution_plan_id" label="Contribution Plan" required>
                                 <option value="">Select Plan</option>
                                 @foreach($contributionPlans as $plan)
-                                    <option value="{{ $plan->id }}">{{ $plan->name }} - ₦{{ number_format($plan->amount) }}</option>
+                                    <option value="{{ $plan->id }}">{{ $plan->label }} - ₦{{ number_format($plan->amount) }}</option>
                                 @endforeach
                             </flux:select>
                         </div>

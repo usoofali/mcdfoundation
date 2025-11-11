@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('members')->name('members.')->group(function () {
         Volt::route('/', 'members.index')->name('index');
         Volt::route('/create', 'members.create')->name('create');
+        Volt::route('/complete-profile', 'members.complete-profile')->name('complete');
         Volt::route('/{member}', 'members.show')->name('show');
         Volt::route('/{member}/edit', 'members.edit')->name('edit');
     });

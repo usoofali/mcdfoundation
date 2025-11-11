@@ -378,7 +378,7 @@ class ContributionService
             'member_id' => $contribution->member_id,
             'source' => 'contribution',
             'amount' => $contribution->total_amount,
-            'description' => "Contribution for {$contribution->contributionPlan->name} plan - Receipt: {$contribution->receipt_number}",
+            'description' => "Contribution for {$contribution->contributionPlan->label} plan - Receipt: {$contribution->receipt_number}",
             'transaction_date' => $contribution->payment_date,
             'reference' => $contribution->receipt_number,
             'created_by' => $contribution->collected_by ?? $contribution->verified_by ?? auth()->id(),

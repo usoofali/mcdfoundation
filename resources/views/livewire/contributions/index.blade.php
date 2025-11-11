@@ -133,8 +133,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                     </flux:text>
                 </div>
                 <div>
-                    <flux:button variant="primary" href="{{ route('contributions.create') }}" class="gap-2">
-                        <flux:icon name="plus" class="size-4" />
+                    <flux:button icon="plus" variant="primary" href="{{ route('contributions.create') }}" class="gap-2">
+                        
                         Record Contribution
                     </flux:button>
                 </div>
@@ -295,7 +295,7 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                          <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ $contribution->member->registration_no }}</div>
                                     </td>
                                      <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
-                                        {{ ucfirst($contribution->contributionPlan->name) }}
+                                        {{ $contribution->contributionPlan?->label }}
                                     </td>
                                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                         <div>₦{{ number_format($contribution->amount, 2) }}</div>
@@ -382,8 +382,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                         Get started by recording a contribution.
                      </flux:text>
                     <div class="mt-6">
-                        <flux:button variant="primary" href="{{ route('contributions.create') }}" class="gap-2">
-                            <flux:icon name="plus" class="size-4" />
+                        <flux:button icon="plus" variant="primary" href="{{ route('contributions.create') }}" class="gap-2">
+                            
                             Record Contribution
                         </flux:button>
                     </div>

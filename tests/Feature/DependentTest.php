@@ -63,6 +63,7 @@ class DependentTest extends TestCase
         Volt::test('dependents.manage', ['member' => $member])
             ->call('showCreateModal')
             ->set('form.name', 'John Doe')
+            ->set('form.nin', '12345678901')
             ->set('form.date_of_birth', '2010-01-01')
             ->set('form.relationship', 'child')
             ->set('form.notes', 'Test dependent')
@@ -71,6 +72,7 @@ class DependentTest extends TestCase
         $this->assertDatabaseHas('dependents', [
             'member_id' => $member->id,
             'name' => 'John Doe',
+            'nin' => '12345678901',
             'relationship' => 'child',
             'notes' => 'Test dependent',
         ]);
@@ -154,6 +156,7 @@ class DependentTest extends TestCase
         // Test creating dependent
         $dependentData = [
             'name' => 'Test Dependent',
+            'nin' => '10987654321',
             'date_of_birth' => '2010-01-01',
             'relationship' => 'child',
             'notes' => 'Test notes',
@@ -229,6 +232,7 @@ class DependentTest extends TestCase
 
         $dependentData = [
             'name' => 'Test Dependent',
+            'nin' => '19876543210',
             'date_of_birth' => '2010-01-01',
             'relationship' => 'child',
             'document' => $fakeFile,
@@ -250,9 +254,10 @@ class DependentTest extends TestCase
         Volt::test('dependents.manage', ['member' => $member])
             ->call('showCreateModal')
             ->set('form.name', '') // Empty name
+            ->set('form.nin', '123') // Invalid NIN
             ->set('form.date_of_birth', 'invalid-date') // Invalid date
             ->set('form.relationship', 'invalid-relationship') // Invalid relationship
             ->call('save')
-            ->assertHasErrors(['form.name', 'form.date_of_birth', 'form.relationship']);
+            ->assertHasErrors(['form.name', 'form.nin', 'form.date_of_birth', 'form.relationship']);
     }
 }

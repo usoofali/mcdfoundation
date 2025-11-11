@@ -27,14 +27,16 @@ class ContributionPlanFactory extends Factory
             'annual' => 36000,
         ];
 
-        $name = $this->faker->randomElement(array_keys($plans));
-        $amount = $plans[$name];
+        $frequency = $this->faker->randomElement(array_keys($plans));
+        $amount = $plans[$frequency];
 
         return [
-            'name' => $name,
+            'name' => $frequency,
+            'display_name' => ucfirst($frequency).' Saver',
+            'frequency' => $frequency,
             'amount' => $amount,
             'description' => $this->faker->sentence(),
-            'active' => true,
+            'is_active' => true,
         ];
     }
 
@@ -42,6 +44,8 @@ class ContributionPlanFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'daily',
+            'display_name' => 'Daily Saver',
+            'frequency' => 'daily',
             'amount' => 100,
         ]);
     }
@@ -50,6 +54,8 @@ class ContributionPlanFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'weekly',
+            'display_name' => 'Weekly Saver',
+            'frequency' => 'weekly',
             'amount' => 700,
         ]);
     }
@@ -58,6 +64,8 @@ class ContributionPlanFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'monthly',
+            'display_name' => 'Monthly Saver',
+            'frequency' => 'monthly',
             'amount' => 3000,
         ]);
     }
@@ -66,6 +74,8 @@ class ContributionPlanFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'quarterly',
+            'display_name' => 'Quarterly Saver',
+            'frequency' => 'quarterly',
             'amount' => 9000,
         ]);
     }
@@ -74,6 +84,8 @@ class ContributionPlanFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'annual',
+            'display_name' => 'Annual Saver',
+            'frequency' => 'annual',
             'amount' => 36000,
         ]);
     }
@@ -81,7 +93,7 @@ class ContributionPlanFactory extends Factory
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [
-            'active' => false,
+            'is_active' => false,
         ]);
     }
 }

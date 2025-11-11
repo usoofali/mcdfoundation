@@ -25,7 +25,7 @@ class MemberManagementTest extends TestCase
         // Use existing data from seeders
         $this->state = State::where('name', 'Lagos')->first();
         $this->lga = Lga::where('name', 'Ikeja')->first();
-        $this->contributionPlan = ContributionPlan::where('name', 'monthly')->first();
+        $this->contributionPlan = ContributionPlan::where('frequency', 'monthly')->first();
         $this->healthcareProvider = HealthcareProvider::first();
 
         // Create a user with appropriate role

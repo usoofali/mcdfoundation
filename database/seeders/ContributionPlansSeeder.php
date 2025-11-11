@@ -12,41 +12,48 @@ class ContributionPlansSeeder extends Seeder
         $plans = [
             [
                 'name' => 'daily',
+                'display_name' => 'Daily Saver',
+                'frequency' => 'daily',
                 'amount' => 100.00,
                 'description' => 'Daily contribution plan - ₦100 per day',
-                'active' => true,
+                'is_active' => true,
             ],
             [
                 'name' => 'weekly',
+                'display_name' => 'Weekly Saver',
+                'frequency' => 'weekly',
                 'amount' => 700.00,
                 'description' => 'Weekly contribution plan - ₦700 per week',
-                'active' => true,
+                'is_active' => true,
             ],
             [
                 'name' => 'monthly',
+                'display_name' => 'Monthly Saver',
+                'frequency' => 'monthly',
                 'amount' => 3000.00,
                 'description' => 'Monthly contribution plan - ₦3,000 per month',
-                'active' => true,
+                'is_active' => true,
             ],
             [
                 'name' => 'quarterly',
+                'display_name' => 'Quarterly Saver',
+                'frequency' => 'quarterly',
                 'amount' => 9000.00,
                 'description' => 'Quarterly contribution plan - ₦9,000 per quarter',
-                'active' => true,
+                'is_active' => true,
             ],
             [
                 'name' => 'annual',
+                'display_name' => 'Annual Saver',
+                'frequency' => 'annual',
                 'amount' => 36000.00,
                 'description' => 'Annual contribution plan - ₦36,000 per year',
-                'active' => true,
+                'is_active' => true,
             ],
         ];
 
         foreach ($plans as $plan) {
-            ContributionPlan::updateOrCreate(
-                ['name' => $plan['name']],
-                $plan
-            );
+            ContributionPlan::updateOrCreate(['frequency' => $plan['frequency']], $plan);
         }
     }
 }

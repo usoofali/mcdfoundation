@@ -142,8 +142,8 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                 <flux:heading size="md" class="font-semibold text-neutral-900 dark:text-white">
                     Filters
                 </flux:heading>
-                <flux:button variant="outline" wire:click="clearFilters" class="gap-2 sm:w-auto">
-                    <flux:icon name="arrow-path" class="size-4" />
+                <flux:button icon="arrow-path" variant="outline" wire:click="clearFilters" class="gap-2 sm:w-auto">
+                    
                     Clear Filters
                 </flux:button>
             </div>
@@ -233,7 +233,7 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                                     </td>
                                     <td class="px-6 py-4">
                                         <flux:text class="text-sm font-medium text-neutral-900 dark:text-white">
-                                            {{ $contribution->contributionPlan->name }}
+                                            {{ $contribution->contributionPlan?->label }}
                                         </flux:text>
                                         <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
                                             {{ ucfirst($contribution->contributionPlan->frequency) }}
@@ -259,10 +259,11 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                                             <flux:button 
                                                 variant="outline" 
                                                 size="sm"
+                                                icon="document-text" 
                                                 class="gap-2"
                                                 wire:click="$dispatch('open-receipt-modal', { contributionId: {{ $contribution->id }} })"
                                             >
-                                                <flux:icon name="document-text" class="size-4" />
+                                                
                                                 View Receipt
                                             </flux:button>
                                         @else
@@ -293,10 +294,11 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                                             <flux:button 
                                                 variant="danger" 
                                                 size="sm"
+                                                icon="x-mark" 
                                                 class="gap-2"
                                                 wire:click="verifyContribution({{ $contribution->id }}, false)"
                                             >
-                                                <flux:icon name="x-mark" class="size-4" />
+                                                
                                                 Reject
                                             </flux:button>
                                         </div>
@@ -375,26 +377,29 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                     <div class="flex flex-col gap-3 border-t border-neutral-200 bg-neutral-50 px-4 py-3 sm:flex-row sm:justify-end sm:px-6 dark:border-neutral-700 dark:bg-neutral-900">
                         <flux:button 
                             variant="primary" 
+                            icon="check" 
                             wire:click="confirmVerification(true)"
                             class="w-full gap-2 sm:w-auto"
                         >
-                            <flux:icon name="check" class="size-4" />
+                            
                             Approve Contribution
                         </flux:button>
                         <flux:button 
                             variant="danger" 
+                            icon="x-mark" 
                             wire:click="confirmVerification(false)"
                             class="w-full gap-2 sm:w-auto"
                         >
-                            <flux:icon name="x-mark" class="size-4" />
+                            
                             Reject Contribution
                         </flux:button>
                         <flux:button 
                             variant="outline" 
+                            icon="x-circle" 
                             wire:click="closeModal"
                             class="w-full gap-2 sm:w-auto"
                         >
-                            <flux:icon name="x-circle" class="size-4" />
+                            
                             Cancel
                         </flux:button>
                     </div>

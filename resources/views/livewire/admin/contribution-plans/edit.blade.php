@@ -1,13 +1,14 @@
 <?php
 
 use App\Models\ContributionPlan;
+use Illuminate\Support\Str;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app', ['title' => 'Edit Contribution Plan'])] class extends Component
 {
     public ContributionPlan $plan;
     
-    public string $name = '';
+    public string $display_name = '';
     public string $description = '';
     public string $amount = '';
     public string $frequency = 'monthly';
@@ -16,7 +17,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Contribution Plan'])] c
     public function mount(ContributionPlan $plan): void
     {
         $this->plan = $plan;
-        $this->name = $plan->name;
+        $this->display_name = $plan->display_name ?? Str::headline($plan->name);
         $this->description = $plan->description ?? '';
         $this->amount = $plan->amount;
         $this->frequency = $plan->frequency;
@@ -26,15 +27,16 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Contribution Plan'])] c
     public function save(): void
     {
         $this->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:contribution_plans,name,' . $this->plan->id],
+            'display_name' => ['required', 'string', 'max:255', 'unique:contribution_plans,display_name,' . $this->plan->id],
             'description' => ['nullable', 'string', 'max:500'],
             'amount' => ['required', 'numeric', 'min:0'],
-            'frequency' => ['required', 'in:daily,weekly,monthly,quarterly,annual'],
+            'frequency' => ['required', 'in:daily,weekly,monthly,quarterly,annual', 'unique:contribution_plans,frequency,' . $this->plan->id],
             'is_active' => ['boolean'],
         ]);
 
         $this->plan->update([
-            'name' => $this->name,
+            'name' => $this->frequency,
+            'display_name' => $this->display_name,
             'description' => $this->description,
             'amount' => $this->amount,
             'frequency' => $this->frequency,
@@ -71,7 +73,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Contribution Plan'])] c
                 <!-- Plan Information -->
                 <div class="grid grid-cols-1 gap-6">
                     <flux:input 
-                        wire:model="name" 
+                        wire:model="display_name" 
                         label="{{ __('Plan Name') }}" 
                         placeholder="{{ __('Enter plan name') }}"
                         required

@@ -20,6 +20,10 @@ class MemberPolicy
      */
     public function view(User $user, Member $member): bool
     {
+        if ($member->user_id === $user->id) {
+            return true;
+        }
+
         return $user->hasPermission('view_members');
     }
 
@@ -36,6 +40,10 @@ class MemberPolicy
      */
     public function update(User $user, Member $member): bool
     {
+        if ($member->user_id === $user->id) {
+            return true;
+        }
+
         return $user->hasPermission('edit_members');
     }
 

@@ -56,12 +56,12 @@ new #[Layout('components.layouts.app', ['title' => 'Contribution Plan Details'])
                 <div class="flex-shrink-0">
                     <div class="h-20 w-20 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
                         <span class="text-2xl font-medium text-green-800 dark:text-green-200">
-                            {{ substr($plan->name, 0, 2) }}
+                            {{ substr($plan->label, 0, 2) }}
                         </span>
                     </div>
                 </div>
                 <div class="flex-1">
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $plan->name }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $plan->label }}</h1>
                     <p class="text-neutral-600 dark:text-neutral-400">{{ $plan->description ?? 'No description provided' }}</p>
                     <div class="flex items-center space-x-4 mt-2">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -91,7 +91,7 @@ new #[Layout('components.layouts.app', ['title' => 'Contribution Plan Details'])
                     <dl class="space-y-3">
                         <div>
                             <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Plan Name') }}</dt>
-                            <dd class="text-sm text-gray-900 dark:text-white">{{ $plan->name }}</dd>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ $plan->label }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Description') }}</dt>

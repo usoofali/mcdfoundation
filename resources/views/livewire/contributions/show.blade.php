@@ -71,7 +71,7 @@ new #[Layout('components.layouts.app', ['title' => 'Contribution Details'])] cla
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Contribution Plan</dt>
-                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ ucfirst($contribution->contributionPlan->name) }}</dd>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $contribution->contributionPlan?->label }}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Amount</dt>

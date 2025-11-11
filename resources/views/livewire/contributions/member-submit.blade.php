@@ -102,7 +102,7 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Contribution'])] clas
 
     public function getContributionPlansProperty()
     {
-        return ContributionPlan::where('active', true)->orderBy('amount')->get();
+        return ContributionPlan::where('is_active', true)->orderBy('amount')->get();
     }
 
     public function getPaymentMethodOptionsProperty()
@@ -135,7 +135,7 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Contribution'])] clas
                             >
                                 @foreach($this->contributionPlans as $plan)
                                     <option value="{{ $plan->id }}">
-                                        {{ $plan->name }} - ₦{{ number_format($plan->amount) }} ({{ ucfirst($plan->frequency) }})
+                                    {{ $plan->label }} - ₦{{ number_format($plan->amount) }} ({{ ucfirst($plan->frequency) }})
                                     </option>
                                 @endforeach
                             </flux:select>
@@ -155,7 +155,7 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Contribution'])] clas
                         <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
                             <h4 class="text-sm font-medium text-blue-800">Selected Plan Details</h4>
                             <div class="mt-2 text-sm text-blue-700">
-                                <p><strong>Plan:</strong> {{ $selectedPlan->name }}</p>
+                                <p><strong>Plan:</strong> {{ $selectedPlan->label }}</p>
                                 <p><strong>Amount:</strong> ₦{{ number_format($selectedPlan->amount) }}</p>
                                 <p><strong>Frequency:</strong> {{ ucfirst($selectedPlan->frequency) }}</p>
                                 @if($selectedPlan->description)
