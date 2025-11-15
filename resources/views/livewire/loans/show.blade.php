@@ -24,10 +24,16 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
     {
         try {
             $loanService->approveLoan($this->loan, 1, 'Approved by LG Coordinator');
-            session()->flash('success', 'Loan approved successfully.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Loan approved successfully.',
+            ]);
             $this->loan->refresh();
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to approve loan: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to approve loan: ' . $e->getMessage(),
+            ]);
         }
     }
 
@@ -35,10 +41,16 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
     {
         try {
             $loanService->disburseLoan($this->loan, 'Loan disbursed');
-            session()->flash('success', 'Loan disbursed successfully.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Loan disbursed successfully.',
+            ]);
             $this->loan->refresh();
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to disburse loan: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to disburse loan: ' . $e->getMessage(),
+            ]);
         }
     }
 
@@ -67,18 +79,18 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
                     </flux:text>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <flux:button variant="ghost" href="{{ route('loans.index') }}" class="gap-2">
-                        <flux:icon name="arrow-left" class="size-4" />
+                    <flux:button icon="arrow-left" variant="ghost" href="{{ route('loans.index') }}" class="gap-2">
+                        
                         Back to Loans
                     </flux:button>
                     @if($loan->status === 'pending')
-                        <flux:button variant="primary" wire:click="approveLoan" class="gap-2">
-                            <flux:icon name="check-badge" class="size-4" />
+                        <flux:button icon="check-badge" variant="primary" wire:click="approveLoan" class="gap-2">
+                            
                             Approve Loan
                         </flux:button>
                     @elseif($loan->status === 'approved')
-                        <flux:button variant="primary" wire:click="disburseLoan" class="gap-2">
-                            <flux:icon name="banknotes" class="size-4" />
+                        <flux:button icon="banknotes" variant="primary" wire:click="disburseLoan" class="gap-2">
+                            
                             Disburse Loan
                         </flux:button>
                     @endif

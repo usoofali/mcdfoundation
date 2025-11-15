@@ -120,7 +120,10 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
             
             $this->redirect(route('loans.index'));
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to submit loan application: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to submit loan application: ' . $e->getMessage(),
+            ]);
         }
     }
 
@@ -173,8 +176,8 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
                     </flux:text>
                 </div>
                 <div>
-                    <flux:button variant="ghost" href="{{ route('loans.index') }}" class="gap-2">
-                        <flux:icon name="arrow-left" class="size-4" />
+                    <flux:button icon="arrow-left" variant="ghost" href="{{ route('loans.index') }}" class="gap-2">
+                        
                         Back to Loans
                     </flux:button>
                 </div>

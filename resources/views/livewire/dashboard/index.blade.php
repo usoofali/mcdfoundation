@@ -20,7 +20,10 @@ new class extends Component {
             $dashboardService = app(DashboardService::class);
             $this->dashboardData = $dashboardService->getDashboardData(auth()->user());
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to load dashboard data: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to load dashboard data: ' . $e->getMessage(),
+            ]);
             $this->dashboardData = [
                 'role' => 'member',
                 'title' => 'Dashboard',

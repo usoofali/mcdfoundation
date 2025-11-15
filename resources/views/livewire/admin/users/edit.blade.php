@@ -89,10 +89,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit User'])] class extends 
 
         $this->user->update($updateData);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'User updated successfully.',
-        ]);
+        session()->flash('success', 'User updated successfully.');
 
         $this->redirect(route('admin.users.show', $this->user), navigate: true);
     }

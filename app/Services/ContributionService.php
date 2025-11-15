@@ -75,35 +75,35 @@ class ContributionService
         $query = Contribution::with(['member', 'contributionPlan', 'collector']);
 
         // Apply filters
-        if (isset($filters['member_id'])) {
+        if (! empty($filters['member_id'])) {
             $query->where('member_id', $filters['member_id']);
         }
 
-        if (isset($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (isset($filters['payment_method'])) {
+        if (! empty($filters['payment_method'])) {
             $query->where('payment_method', $filters['payment_method']);
         }
 
-        if (isset($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('payment_date', '>=', $filters['date_from']);
         }
 
-        if (isset($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('payment_date', '<=', $filters['date_to']);
         }
 
-        if (isset($filters['period_from'])) {
+        if (! empty($filters['period_from'])) {
             $query->where('period_start', '>=', $filters['period_from']);
         }
 
-        if (isset($filters['period_to'])) {
+        if (! empty($filters['period_to'])) {
             $query->where('period_end', '<=', $filters['period_to']);
         }
 
-        if (isset($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('receipt_number', 'like', "%{$search}%")
@@ -148,15 +148,15 @@ class ContributionService
         $query = Contribution::query();
 
         // Apply same filters as getContributions
-        if (isset($filters['member_id'])) {
+        if (! empty($filters['member_id'])) {
             $query->where('member_id', $filters['member_id']);
         }
 
-        if (isset($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('payment_date', '>=', $filters['date_from']);
         }
 
-        if (isset($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('payment_date', '<=', $filters['date_to']);
         }
 

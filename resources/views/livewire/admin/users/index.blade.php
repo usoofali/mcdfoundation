@@ -93,19 +93,29 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
     }
 }; ?>
 
-<x-slot name="header">
-    <div class="flex justify-between items-center">
-        <h2 class="leading-tight text-xl font-semibold text-gray-900 dark:text-white">{{ __('User Management') }}</h2>
-        <flux:button :href="route('admin.users.create')" primary wire:navigate class="gap-2">
-            <flux:icon name="user-plus" class="size-4" />
-            {{ __('Add New User') }}
-        </flux:button>
-    </div>
-</x-slot>
-
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+        <div class="space-y-6">
+            <!-- Page Header -->
+            <div class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1.5">
+                        <flux:heading size="xl" class="font-bold text-neutral-900 dark:text-white">
+                            {{ __('User Management') }}
+                        </flux:heading>
+                        <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Manage system users and their roles') }}
+                        </flux:text>
+                    </div>
+                    <div>
+                        <flux:button icon="user-plus" variant="primary" :href="route('admin.users.create')" wire:navigate class="gap-2">
+                            {{ __('Add New User') }}
+                        </flux:button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
             <!-- Search and Filters -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <flux:input 
@@ -243,6 +253,7 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
                     description="{{ __('No users match your current search criteria.') }}"
                 />
             @endif
+            </div>
         </div>
     </div>
 </div>

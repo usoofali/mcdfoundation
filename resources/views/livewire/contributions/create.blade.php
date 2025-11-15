@@ -64,7 +64,10 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
             
             $this->redirect(route('contributions.index'));
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to record contribution: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to record contribution: ' . $e->getMessage(),
+            ]);
         }
     }
 

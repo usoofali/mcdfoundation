@@ -46,11 +46,17 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
             );
 
             $status = $approved ? 'approved' : 'rejected';
-            session()->flash('success', "Contribution {$status} successfully!");
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => "Contribution {$status} successfully!",
+            ]);
             
             $this->closeModal();
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to verify contribution: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to verify contribution: ' . $e->getMessage(),
+            ]);
         }
     }
 

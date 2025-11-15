@@ -64,10 +64,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create User'])] class extend
             'email_verified_at' => now(),
         ]);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'User created successfully.',
-        ]);
+        session()->flash('success', 'User created successfully.');
 
         $this->redirect(route('admin.users.index'), navigate: true);
     }

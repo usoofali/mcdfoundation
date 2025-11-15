@@ -67,12 +67,12 @@ new class extends Component
     <div class="flex items-center justify-between">
         <h2 class="leading-tight text-xl font-semibold text-zinc-800 dark:text-zinc-200">{{ __('System Settings') }}</h2>
         <div class="flex flex-wrap items-center gap-2">
-            <flux:button wire:click="resetToDefaults" variant="outline" class="gap-2">
-                <flux:icon name="arrow-path" class="size-4" />
+            <flux:button icon="arrow-path" wire:click="resetToDefaults" variant="outline" class="gap-2">
+                
                 {{ __('Reset to Defaults') }}
             </flux:button>
-            <flux:button wire:click="save" primary class="gap-2">
-                <flux:icon name="check" class="size-4" />
+            <flux:button icon="check"  wire:click="save" primary class="gap-2">
+                
                 {{ __('Save Settings') }}
             </flux:button>
         </div>

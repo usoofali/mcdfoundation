@@ -102,10 +102,16 @@ new class extends Component {
 
         if ($this->editingDependent) {
             $dependentService->updateDependent($this->editingDependent, $this->form);
-            session()->flash('success', 'Dependent updated successfully.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Dependent updated successfully.',
+            ]);
         } else {
             $dependentService->createDependent($this->member, $this->form);
-            session()->flash('success', 'Dependent added successfully.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Dependent added successfully.',
+            ]);
         }
 
         $this->loadDependents();

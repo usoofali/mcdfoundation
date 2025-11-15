@@ -59,7 +59,10 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Contribution'])] clas
             
             $this->redirect(route('contributions.index'));
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to submit contribution: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to submit contribution: ' . $e->getMessage(),
+            ]);
         }
     }
 

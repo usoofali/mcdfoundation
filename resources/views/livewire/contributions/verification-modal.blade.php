@@ -101,8 +101,8 @@ new class extends Component {
                                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                                         Payment Receipt - {{ $contribution->receipt_number }}
                                     </h3>
-                                    <flux:button variant="outline" size="sm" wire:click="closeModal">
-                                        <flux:icon name="x-mark" class="w-4 h-4" />
+                                    <flux:button icon="x-mark"  variant="outline" size="sm" wire:click="closeModal">
+                                        
                                     </flux:button>
                                 </div>
                                 

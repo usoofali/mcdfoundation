@@ -204,8 +204,8 @@ new #[Layout('components.layouts.app', ['title' => 'Members'])] class extends Co
                         </flux:text>
                     </div>
                     <div>
-                        <flux:button variant="primary" href="{{ route('members.create') }}" wire:navigate class="gap-2">
-                            <flux:icon name="plus" class="size-4" />
+                        <flux:button icon="plus" variant="primary" href="{{ route('members.create') }}" wire:navigate class="gap-2">
+                            
                             Add Member
                         </flux:button>
                     </div>

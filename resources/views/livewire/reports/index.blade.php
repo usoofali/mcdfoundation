@@ -65,7 +65,10 @@ new class extends Component {
         
         // For now, we'll just show a success message
         // In a real implementation, you'd generate and download the file
-        session()->flash('success', 'Report exported successfully. ' . count($data) . ' records exported.');
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Report exported successfully. ' . count($data) . ' records exported.',
+        ]);
     }
 
     protected function getFilters(): array

@@ -61,8 +61,8 @@ new class extends Component {
                     </flux:text>
                 </div>
                 @can('create', Loan::class)
-                    <flux:button href="{{ route('loans.create') }}" variant="primary" class="w-full gap-2 sm:w-auto" wire:navigate>
-                        <flux:icon name="plus" class="size-4" />
+                    <flux:button icon="plus" href="{{ route('loans.create') }}" variant="primary" class="w-full gap-2 sm:w-auto" wire:navigate>
+                        
                         {{ __('New Loan') }}
                     </flux:button>
                 @endcan
