@@ -21,7 +21,7 @@ Route::middleware(['auth'])->group(function () {
         ->middleware(
             when(
                 Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+                && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
                 ['password.confirm'],
                 [],
             ),
@@ -66,6 +66,14 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/create', 'loans.create')->name('create');
         Volt::route('/{loan}', 'loans.show')->name('show');
         Volt::route('/{loan}/edit', 'loans.edit')->name('edit');
+    });
+
+    // Health Claims Management Routes
+    Route::prefix('health-claims')->name('health-claims.')->group(function () {
+        Volt::route('/', 'health-claims.index')->name('index');
+        Volt::route('/create', 'health-claims.create')->name('create');
+        Volt::route('/{claim}', 'health-claims.show')->name('show');
+        Volt::route('/{claim}/edit', 'health-claims.edit')->name('edit');
     });
 
     // Reports Routes
