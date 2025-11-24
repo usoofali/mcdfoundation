@@ -1,7 +1,8 @@
 <?php
 
-use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Role;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 
@@ -10,10 +11,12 @@ new class extends Component
     use WithPagination;
 
     public string $search = '';
+
     public array $permissions = [];
 
     public function mount(): void
     {
+        Gate::authorize('viewAny', Role::class);
         $this->permissions = Permission::orderBy('name')->get()->toArray();
     }
 
@@ -24,17 +27,20 @@ new class extends Component
 
     public function deleteRole(Role $role): void
     {
+        Gate::authorize('delete', $role);
+
         // Check if role has users
         if ($role->users()->count() > 0) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'Cannot delete role that is assigned to users.',
             ]);
+
             return;
         }
 
         $role->delete();
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Role deleted successfully.',
@@ -46,8 +52,8 @@ new class extends Component
         $query = Role::query()
             ->withCount('users')
             ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                $query->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%');
             });
 
         return [
@@ -56,27 +62,37 @@ new class extends Component
     }
 }; ?>
 
-<x-slot name="header">
-    <div class="flex items-center justify-between">
-        <h2 class="leading-tight text-xl font-semibold text-gray-900 dark:text-white">{{ __('Role Management') }}</h2>
-        <flux:button :href="route('admin.roles.create')" primary wire:navigate class="gap-2">
-            <flux:icon name="plus-circle" class="size-4" />
-            {{ __('Create New Role') }}
-        </flux:button>
-    </div>
-</x-slot>
-
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
-            <!-- Search -->
-            <div class="mb-6">
-                <flux:input 
-                    wire:model.live.debounce.300ms="search" 
-                    placeholder="{{ __('Search roles...') }}" 
-                    icon="magnifying-glass"
-                />
+        <div class="space-y-6">
+            <!-- Page Header -->
+            <div class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1.5">
+                        <flux:heading size="xl" class="font-bold text-neutral-900 dark:text-white">
+                            {{ __('Role Management') }}
+                        </flux:heading>
+                        <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Manage system roles and permissions') }}
+                        </flux:text>
+                    </div>
+                    <div>
+                        <flux:button icon="plus-circle" variant="primary" :href="route('admin.roles.create')" wire:navigate class="gap-2">
+                            {{ __('Create New Role') }}
+                        </flux:button>
+                    </div>
+                </div>
             </div>
+
+            <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+                <!-- Search -->
+                <div class="mb-6">
+                    <flux:input 
+                        wire:model.live.debounce.300ms="search" 
+                        placeholder="{{ __('Search roles...') }}" 
+                        icon="magnifying-glass"
+                    />
+                </div>
 
             <!-- Roles Table -->
             @if($roles->count() > 0)
@@ -155,14 +171,15 @@ new class extends Component
                                                 {{ __('Edit') }}
                                             </flux:button>
                                             
-                                            <flux:button 
-                                                wire:click="deleteRole({{ $role->id }})"
-                                                size="sm" 
-                                                variant="danger"
-                                                wire:confirm="Are you sure you want to delete this role? This action cannot be undone."
-                                            >
-                                                {{ __('Delete') }}
-                                            </flux:button>
+                                            <flux:modal.trigger name="confirm-delete-role-{{ $role->id }}">
+                                                <flux:button 
+                                                    size="sm" 
+                                                    variant="danger"
+                                                    wire:click="$dispatch('open-modal', 'confirm-delete-role-{{ $role->id }}')"
+                                                >
+                                                    {{ __('Delete') }}
+                                                </flux:button>
+                                            </flux:modal.trigger>
                                         </div>
                                     </td>
                                 </tr>
@@ -181,6 +198,34 @@ new class extends Component
                     description="{{ __('No roles match your current search criteria.') }}"
                 />
             @endif
+            </div>
         </div>
+
+        @foreach($roles as $role)
+            <!-- Delete Role Modal -->
+            <flux:modal name="confirm-delete-role-{{ $role->id }}" focusable class="max-w-lg">
+                <div class="space-y-6">
+                    <div>
+                        <flux:heading size="lg">{{ __('Confirm Deletion') }}</flux:heading>
+                        <flux:subheading>
+                            {{ __('Are you sure you want to delete this role? This action cannot be undone. All associated data will be permanently deleted.') }}
+                        </flux:subheading>
+                    </div>
+
+                    <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                        <flux:modal.close>
+                            <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                        </flux:modal.close>
+
+                        <flux:button 
+                            variant="danger" 
+                            wire:click="deleteRole({{ $role->id }})"
+                        >
+                            {{ __('Delete') }}
+                        </flux:button>
+                    </div>
+                </div>
+            </flux:modal>
+        @endforeach
     </div>
 </div>

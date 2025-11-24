@@ -1,22 +1,24 @@
 <?php
 
-use App\Models\Member;
 use App\Models\Dependent;
+use App\Models\Member;
 use App\Services\DependentService;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
-new class extends Component {
+new class extends Component
+{
     use WithFileUploads;
+    use WithPagination;
 
     public Member $member;
-    public $dependents;
+
     public $showModal = false;
+
     public $editingDependent = null;
+
     public $form = [
         'name' => '',
         'nin' => '',
@@ -29,30 +31,29 @@ new class extends Component {
     public function mount(Member $member): void
     {
         $this->member = $member;
-        
+
         // Check authorization
-        if (!auth()->user()->can('view', $member)) {
+        if (! auth()->user()->can('view', $member)) {
             abort(403, 'You do not have permission to view this member\'s dependents.');
         }
-        
-        $this->loadDependents();
     }
 
-    public function loadDependents(): void
+    public function getDependentsProperty()
     {
-        $this->dependents = $this->member->dependents()
+        return $this->member->dependents()
             ->orderBy('relationship')
             ->orderBy('name')
-            ->get();
+            ->paginate(15);
     }
 
     public function showCreateModal(): void
     {
-        if (!auth()->user()->can('create', Dependent::class)) {
+        if (! auth()->user()->can('create', Dependent::class)) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'You do not have permission to create dependents.',
             ]);
+
             return;
         }
 
@@ -63,11 +64,12 @@ new class extends Component {
 
     public function showEditModal(Dependent $dependent): void
     {
-        if (!auth()->user()->can('update', $dependent)) {
+        if (! auth()->user()->can('update', $dependent)) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'You do not have permission to edit this dependent.',
             ]);
+
             return;
         }
 
@@ -114,28 +116,29 @@ new class extends Component {
             ]);
         }
 
-        $this->loadDependents();
+        $this->resetPage();
         $this->closeModal();
     }
 
     public function delete(Dependent $dependent): void
     {
-        if (!auth()->user()->can('delete', $dependent)) {
+        if (! auth()->user()->can('delete', $dependent)) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'You do not have permission to delete this dependent.',
             ]);
+
             return;
         }
 
         $dependentService = app(DependentService::class);
         $dependentService->deleteDependent($dependent);
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Dependent deleted successfully.',
         ]);
-        $this->loadDependents();
+        $this->resetPage();
     }
 
     public function closeModal(): void
@@ -171,6 +174,7 @@ new class extends Component {
     public function getDependentStatsProperty()
     {
         $dependentService = app(DependentService::class);
+
         return $dependentService->getDependentStats($this->member);
     }
 }; ?>
@@ -261,7 +265,7 @@ new class extends Component {
 
         <!-- Dependents List -->
             <div class="rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
-            @if($dependents->count() > 0)
+            @if($this->dependents->count() > 0)
                 <div class="overflow-hidden">
                     <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                         <thead class="bg-neutral-50 dark:bg-neutral-900">
@@ -276,7 +280,7 @@ new class extends Component {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
-                            @foreach($dependents as $dependent)
+                            @foreach($this->dependents as $dependent)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-neutral-900 dark:text-white">{{ $dependent->name }}</div>
@@ -312,14 +316,15 @@ new class extends Component {
                                             <flux:button variant="ghost" size="sm" wire:click="showEditModal({{ $dependent->id }})">
                                                 Edit
                                             </flux:button>
-                                            <flux:button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                wire:click="delete({{ $dependent->id }})"
-                                                wire:confirm="Are you sure you want to delete this dependent?"
-                                            >
-                                                Delete
-                                            </flux:button>
+                                            <flux:modal.trigger name="confirm-delete-dependent-{{ $dependent->id }}">
+                                                <flux:button 
+                                                    variant="ghost" 
+                                                    size="sm"
+                                                    wire:click="$dispatch('open-modal', 'confirm-delete-dependent-{{ $dependent->id }}')"
+                                                >
+                                                    Delete
+                                                </flux:button>
+                                            </flux:modal.trigger>
                                         </div>
                                     </td>
                                 </tr>
@@ -327,6 +332,13 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Pagination -->
+                @if($this->dependents->hasPages())
+                    <div class="border-t border-neutral-200 dark:border-neutral-700 px-6 py-4">
+                        {{ $this->dependents->links() }}
+                    </div>
+                @endif
             @else
                 <div class="py-12 text-center">
                     <svg class="mx-auto h-12 w-12 text-neutral-400 dark:text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -429,4 +441,31 @@ new class extends Component {
             </div>
         </div>
     @endif
+
+    @foreach($this->dependents as $dependent)
+        <!-- Delete Dependent Modal -->
+        <flux:modal name="confirm-delete-dependent-{{ $dependent->id }}" focusable class="max-w-lg">
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Confirm Deletion') }}</flux:heading>
+                    <flux:subheading>
+                        {{ __('Are you sure you want to delete this dependent? This action cannot be undone.') }}
+                    </flux:subheading>
+                </div>
+
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <flux:modal.close>
+                        <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+
+                    <flux:button 
+                        variant="danger" 
+                        wire:click="delete({{ $dependent->id }})"
+                    >
+                        {{ __('Delete') }}
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
+    @endforeach
 </div>

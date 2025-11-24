@@ -1,34 +1,44 @@
 <?php
 
 use App\Models\Role;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 
 new #[Layout('components.layouts.app', ['title' => 'Role Details'])] class extends Component
 {
+    use WithPagination;
+
     public Role $role;
 
     public function mount(Role $role): void
     {
-        $this->role = $role->load(['permissions', 'users']);
+        Gate::authorize('view', $role);
+        $this->role = $role->load(['permissions']);
+    }
+
+    public function getUsersProperty()
+    {
+        return $this->role->users()->orderBy('name')->paginate(15);
     }
 
     public function deleteRole(): void
     {
+        Gate::authorize('delete', $this->role);
+
         // Check if role has users
         if ($this->role->users()->count() > 0) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'Cannot delete role that is assigned to users.',
             ]);
+
             return;
         }
 
         $this->role->delete();
-        
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Role deleted successfully.',
-        ]);
+
+        session()->flash('success', 'Role deleted successfully.');
 
         $this->redirect(route('admin.roles.index'), navigate: true);
     }
@@ -65,13 +75,14 @@ new #[Layout('components.layouts.app', ['title' => 'Role Details'])] class exten
                     <p class="text-neutral-600 dark:text-neutral-400">{{ $role->description ?? 'No description provided' }}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <flux:button 
-                        wire:click="deleteRole"
-                        variant="danger"
-                        wire:confirm="Are you sure you want to delete this role? This action cannot be undone."
-                    >
-                        {{ __('Delete Role') }}
-                    </flux:button>
+                    <flux:modal.trigger name="confirm-delete-role-{{ $role->id }}">
+                        <flux:button 
+                            variant="danger"
+                            wire:click="$dispatch('open-modal', 'confirm-delete-role-{{ $role->id }}')"
+                        >
+                            {{ __('Delete Role') }}
+                        </flux:button>
+                    </flux:modal.trigger>
                 </div>
             </div>
 
@@ -106,7 +117,7 @@ new #[Layout('components.layouts.app', ['title' => 'Role Details'])] class exten
                     <dl class="space-y-3">
                         <div>
                             <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Total Users') }}</dt>
-                            <dd class="text-sm text-gray-900 dark:text-white">{{ $role->users->count() }}</dd>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ $role->users()->count() }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Total Permissions') }}</dt>
@@ -138,7 +149,7 @@ new #[Layout('components.layouts.app', ['title' => 'Role Details'])] class exten
             <div class="mt-6">
                 <div class="bg-neutral-50 dark:bg-neutral-900 p-6 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('Users with this Role') }}</h3>
-                    @if($role->users->count() > 0)
+                    @if($this->users->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                                 <thead class="bg-white dark:bg-neutral-800">
@@ -158,7 +169,7 @@ new #[Layout('components.layouts.app', ['title' => 'Role Details'])] class exten
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700">
-                                    @foreach($role->users as $user)
+                                    @foreach($this->users as $user)
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                                 {{ $user->name }}
@@ -186,6 +197,13 @@ new #[Layout('components.layouts.app', ['title' => 'Role Details'])] class exten
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination -->
+                        @if($this->users->hasPages())
+                            <div class="mt-4 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4">
+                                {{ $this->users->links() }}
+                            </div>
+                        @endif
                     @else
                         <p class="text-neutral-500 dark:text-neutral-400">{{ __('No users assigned to this role.') }}</p>
                     @endif
@@ -193,4 +211,29 @@ new #[Layout('components.layouts.app', ['title' => 'Role Details'])] class exten
             </div>
         </div>
     </div>
+
+    <!-- Delete Role Modal -->
+    <flux:modal name="confirm-delete-role-{{ $role->id }}" focusable class="max-w-lg">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Confirm Deletion') }}</flux:heading>
+                <flux:subheading>
+                    {{ __('Are you sure you want to delete this role? This action cannot be undone. All associated data will be permanently deleted.') }}
+                </flux:subheading>
+            </div>
+
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                <flux:modal.close>
+                    <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+
+                <flux:button 
+                    variant="danger" 
+                    wire:click="deleteRole"
+                >
+                    {{ __('Delete') }}
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

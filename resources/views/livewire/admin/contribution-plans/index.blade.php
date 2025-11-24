@@ -23,11 +23,12 @@ new class extends Component
                 'type' => 'error',
                 'message' => 'Cannot delete contribution plan that has associated contributions.',
             ]);
+
             return;
         }
 
         $plan->delete();
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'Contribution plan deleted successfully.',
@@ -39,8 +40,8 @@ new class extends Component
         $query = ContributionPlan::query()
             ->withCount('contributions')
             ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                $query->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%');
             });
 
         return [
@@ -159,14 +160,15 @@ new class extends Component
                                                 {{ __('Edit') }}
                                             </flux:button>
                                             
-                                            <flux:button 
-                                                wire:click="deletePlan({{ $plan->id }})"
-                                                size="sm" 
-                                                variant="danger"
-                                                wire:confirm="Are you sure you want to delete this contribution plan? This action cannot be undone."
-                                            >
-                                                {{ __('Delete') }}
-                                            </flux:button>
+                                            <flux:modal.trigger name="confirm-delete-plan-{{ $plan->id }}">
+                                                <flux:button 
+                                                    size="sm" 
+                                                    variant="danger"
+                                                    wire:click="$dispatch('open-modal', 'confirm-delete-plan-{{ $plan->id }}')"
+                                                >
+                                                    {{ __('Delete') }}
+                                                </flux:button>
+                                            </flux:modal.trigger>
                                         </div>
                                     </td>
                                 </tr>
@@ -186,5 +188,32 @@ new class extends Component
                 />
             @endif
         </div>
+
+        @foreach($plans as $plan)
+            <!-- Delete Plan Modal -->
+            <flux:modal name="confirm-delete-plan-{{ $plan->id }}" focusable class="max-w-lg">
+                <div class="space-y-6">
+                    <div>
+                        <flux:heading size="lg">{{ __('Confirm Deletion') }}</flux:heading>
+                        <flux:subheading>
+                            {{ __('Are you sure you want to delete this contribution plan? This action cannot be undone. All associated data will be permanently deleted.') }}
+                        </flux:subheading>
+                    </div>
+
+                    <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                        <flux:modal.close>
+                            <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                        </flux:modal.close>
+
+                        <flux:button 
+                            variant="danger" 
+                            wire:click="deletePlan({{ $plan->id }})"
+                        >
+                            {{ __('Delete') }}
+                        </flux:button>
+                    </div>
+                </div>
+            </flux:modal>
+        @endforeach
     </div>
 </div>

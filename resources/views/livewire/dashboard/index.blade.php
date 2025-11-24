@@ -2,10 +2,17 @@
 
 use App\Services\DashboardService;
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 
-new class extends Component {
+new class extends Component
+{
+    use WithPagination;
+
     public $dashboardData = [];
+
     public $loading = true;
+
+    public $activitiesPerPage = 10;
 
     public function mount(): void
     {
@@ -15,15 +22,22 @@ new class extends Component {
     public function loadDashboardData(): void
     {
         $this->loading = true;
-        
+
         try {
             $dashboardService = app(DashboardService::class);
             $this->dashboardData = $dashboardService->getDashboardData(auth()->user());
         } catch (\Exception $e) {
+            \Log::error('Failed to load dashboard data', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to load dashboard data: ' . $e->getMessage(),
+                'message' => 'Failed to load dashboard data. Please try again later.',
             ]);
+
             $this->dashboardData = [
                 'role' => 'member',
                 'title' => 'Dashboard',
@@ -38,8 +52,30 @@ new class extends Component {
         }
     }
 
+    public function getActivitiesProperty()
+    {
+        $activities = $this->dashboardData['recent_activities'] ?? collect();
+
+        if ($activities instanceof \Illuminate\Support\Collection) {
+            $page = $this->getPage();
+            $perPage = $this->activitiesPerPage;
+            $offset = ($page - 1) * $perPage;
+
+            return new \Illuminate\Pagination\LengthAwarePaginator(
+                $activities->slice($offset, $perPage)->values(),
+                $activities->count(),
+                $perPage,
+                $page,
+                ['path' => request()->url(), 'pageName' => 'page']
+            );
+        }
+
+        return $activities;
+    }
+
     public function refreshDashboard(): void
     {
+        $this->resetPage();
         $this->loadDashboardData();
     }
 }; ?>
@@ -63,8 +99,23 @@ new class extends Component {
                         </flux:text>
                     </div>
                     <div>
-                        <flux:button variant="outline" wire:click="refreshDashboard" icon="arrow-path" class="gap-2">
-                            Refresh
+                        <flux:button 
+                            variant="outline" 
+                            wire:click="refreshDashboard" 
+                            wire:loading.attr="disabled"
+                            wire:target="refreshDashboard"
+                            class="gap-2"
+                            aria-label="Refresh dashboard data"
+                        >
+                            <flux:icon 
+                                name="arrow-path" 
+                                class="size-4"
+                                wire:loading.class="animate-spin"
+                                wire:target="refreshDashboard"
+                                aria-hidden="true"
+                            />
+                            <span wire:loading.remove wire:target="refreshDashboard">Refresh</span>
+                            <span wire:loading wire:target="refreshDashboard" aria-live="polite">Refreshing...</span>
                         </flux:button>
                     </div>
                 </div>
@@ -93,7 +144,7 @@ new class extends Component {
 
             <!-- Statistics Cards -->
             @if(!empty($dashboardData['stats']))
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     @foreach($dashboardData['stats'] as $stat)
                         @php
                             $color = $stat['color'] ?? 'indigo';
@@ -137,10 +188,42 @@ new class extends Component {
                             </flux:heading>
                         </div>
                         <div class="p-4 sm:p-6">
-                            @if((is_array($dashboardData['recent_activities']) ? count($dashboardData['recent_activities']) > 0 : $dashboardData['recent_activities']->isNotEmpty()))
+                            @php
+                                $activities = $this->activities;
+                            @endphp
+                            @if($activities->count() > 0)
                                 <div class="flow-root">
                                     <ul class="-mb-8">
-                                        @foreach($dashboardData['recent_activities'] as $index => $activity)
+                                        @foreach($activities as $index => $activity)
+                                            @php
+                                                $entityType = strtolower(class_basename($activity->entity_type ?? ''));
+                                                $action = strtolower($activity->action ?? '');
+                                                
+                                                // Map entity types to icons
+                                                $iconMap = [
+                                                    'member' => 'user',
+                                                    'contribution' => 'currency-dollar',
+                                                    'loan' => 'banknotes',
+                                                    'healthclaim' => 'heart',
+                                                    'user' => 'users',
+                                                    'fundledger' => 'wallet',
+                                                    'auditlog' => 'document-text',
+                                                ];
+                                                
+                                                // Map actions to icons if entity type not found
+                                                if (!isset($iconMap[$entityType])) {
+                                                    $actionMap = [
+                                                        'created' => 'plus-circle',
+                                                        'updated' => 'pencil',
+                                                        'deleted' => 'trash',
+                                                        'approved' => 'check-circle',
+                                                        'rejected' => 'x-circle',
+                                                    ];
+                                                    $icon = $actionMap[$action] ?? 'document-text';
+                                                } else {
+                                                    $icon = $iconMap[$entityType];
+                                                }
+                                            @endphp
                                             <li>
                                                 <div class="relative pb-8">
                                                     @if(!$loop->last)
@@ -149,7 +232,7 @@ new class extends Component {
                                                     <div class="relative flex items-start gap-3">
                                                         <div>
                                                             <span class="h-8 w-8 rounded-full bg-neutral-400 dark:bg-neutral-600 flex items-center justify-center ring-8 ring-white dark:ring-zinc-800">
-                                                                <flux:icon name="user" class="w-4 h-4 text-white" />
+                                                                <flux:icon name="{{ $icon }}" class="w-4 h-4 text-white" />
                                                             </span>
                                                         </div>
                                                         <div class="min-w-0 flex flex-1 items-start justify-between gap-4 pt-1.5">
@@ -161,7 +244,10 @@ new class extends Component {
                                                                 </p>
                                                             </div>
                                                             <div class="text-right text-sm whitespace-nowrap text-neutral-500 dark:text-neutral-400">
-                                                                <time datetime="{{ $activity->created_at->toISOString() }}">
+                                                                <time 
+                                                                    datetime="{{ $activity->created_at->toISOString() }}"
+                                                                    title="{{ $activity->created_at->format('M j, Y g:i A') }}"
+                                                                >
                                                                     {{ $activity->created_at->diffForHumans() }}
                                                                 </time>
                                                             </div>
@@ -171,6 +257,9 @@ new class extends Component {
                                             </li>
                                         @endforeach
                                     </ul>
+                                </div>
+                                <div class="mt-4">
+                                    {{ $activities->links() }}
                                 </div>
                             @else
                                 <div class="text-center py-6">
@@ -200,16 +289,36 @@ new class extends Component {
                             <div class="p-4 sm:p-6">
                                 <div class="space-y-4">
                                     @foreach($dashboardData['pending_approvals'] as $approval)
+                                        @php
+                                            $approvalType = class_basename($approval::class);
+                                            $statusBadgeColor = match($approval->status ?? 'pending') {
+                                                'pending' => 'yellow',
+                                                'submitted' => 'blue',
+                                                'approved' => 'green',
+                                                default => 'gray',
+                                            };
+                                        @endphp
                                         <div class="flex items-center justify-between gap-3 rounded-lg border border-yellow-100 bg-yellow-50 p-3 dark:border-yellow-900/30 dark:bg-yellow-900/20">
                                             <div class="min-w-0 flex-1">
-                                                <flux:text class="text-sm font-medium text-neutral-900 dark:text-white">
-                                                    {{ $approval->member->full_name ?? 'Unknown Member' }}
-                                                </flux:text>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <flux:text class="text-sm font-medium text-neutral-900 dark:text-white">
+                                                        {{ $approval->member->full_name ?? 'Unknown Member' }}
+                                                    </flux:text>
+                                                    <flux:badge size="sm" color="{{ $statusBadgeColor }}">
+                                                        {{ ucfirst($approval->status ?? 'pending') }}
+                                                    </flux:badge>
+                                                </div>
                                                 <flux:text class="text-xs text-neutral-600 dark:text-neutral-400">
-                                                    {{ ucfirst($approval->status) }} - ₦{{ number_format($approval->amount ?? 0, 2) }}
+                                                    {{ $approvalType === 'Loan' ? 'Loan' : ($approvalType === 'HealthClaim' ? 'Health Claim' : $approvalType) }} - ₦{{ number_format($approval->amount ?? $approval->covered_amount ?? 0, 2) }}
                                                 </flux:text>
                                             </div>
-                                            <flux:button size="sm" variant="primary" :href="route('loans.show', $approval->id)" wire:navigate>
+                                            <flux:button 
+                                                size="sm" 
+                                                variant="primary" 
+                                                :href="$approvalType === 'Loan' ? route('loans.show', $approval->id) : ($approvalType === 'HealthClaim' ? '#' : '#')" 
+                                                wire:navigate
+                                                aria-label="Review {{ $approvalType }} for {{ $approval->member->full_name ?? 'member' }}"
+                                            >
                                                 Review
                                             </flux:button>
                                         </div>
@@ -235,8 +344,9 @@ new class extends Component {
                                             :href="$action['url']" 
                                             wire:navigate
                                             class="justify-start gap-2"
+                                            aria-label="{{ $action['title'] }}"
                                         >
-                                            <flux:icon name="{{ $action['icon'] }}" class="size-4" />
+                                            <flux:icon name="{{ $action['icon'] }}" class="size-4" aria-hidden="true" />
                                             {{ $action['title'] }}
                                         </flux:button>
                                     @endforeach
@@ -249,7 +359,128 @@ new class extends Component {
 
             <!-- Charts Section -->
             @if(!empty($dashboardData['charts']))
-                <div class="rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+                <div class="rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800"
+                     x-data="{
+                         charts: {},
+                         initCharts() {
+                             @foreach($dashboardData['charts'] as $chartName => $chartData)
+                                 this.initChart('{{ $chartName }}', @js($chartData));
+                             @endforeach
+                         },
+                         initChart(chartName, chartData) {
+                             const ctx = document.getElementById('chart-' + chartName);
+                             if (!ctx || !window.Chart) return;
+
+                             // Destroy existing chart if it exists
+                             if (this.charts[chartName]) {
+                                 this.charts[chartName].destroy();
+                             }
+
+                             // Determine chart type based on data
+                             const chartType = this.getChartType(chartName, chartData);
+                             const config = this.getChartConfig(chartName, chartType, chartData);
+
+                             this.charts[chartName] = new window.Chart(ctx, config);
+                         },
+                         getChartType(chartName, chartData) {
+                             // Determine chart type based on chart name
+                             if (chartName.includes('distribution') || chartName.includes('status') || chartName.includes('type') || chartName.includes('flow')) {
+                                 return 'doughnut';
+                             }
+                             return 'line';
+                         },
+                         getChartConfig(chartName, chartType, chartData) {
+                             const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                             const textColor = isDark ? '#e5e7eb' : '#374151';
+                             const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+                             if (chartType === 'doughnut') {
+                                 return {
+                                     type: 'doughnut',
+                                     data: {
+                                         labels: chartData.labels || [],
+                                         datasets: [{
+                                             data: chartData.data || [],
+                                             backgroundColor: [
+                                                 'rgb(59, 130, 246)',
+                                                 'rgb(34, 197, 94)',
+                                                 'rgb(234, 179, 8)',
+                                                 'rgb(239, 68, 68)',
+                                                 'rgb(168, 85, 247)',
+                                                 'rgb(236, 72, 153)',
+                                             ],
+                                         }],
+                                     },
+                                     options: {
+                                         responsive: true,
+                                         maintainAspectRatio: false,
+                                         plugins: {
+                                             legend: {
+                                                 position: 'bottom',
+                                                 labels: {
+                                                     color: textColor,
+                                                     padding: 15,
+                                                 },
+                                             },
+                                         },
+                                     },
+                                 };
+                             }
+
+                             return {
+                                 type: 'line',
+                                 data: {
+                                     labels: chartData.labels || [],
+                                     datasets: [{
+                                         label: chartName.replace(/_/g, ' '),
+                                         data: chartData.data || [],
+                                         borderColor: 'rgb(59, 130, 246)',
+                                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                         tension: 0.4,
+                                         fill: true,
+                                     }],
+                                 },
+                                 options: {
+                                     responsive: true,
+                                     maintainAspectRatio: false,
+                                     plugins: {
+                                         legend: {
+                                             display: false,
+                                         },
+                                         tooltip: {
+                                             mode: 'index',
+                                             intersect: false,
+                                         },
+                                     },
+                                     scales: {
+                                         y: {
+                                             beginAtZero: true,
+                                             ticks: {
+                                                 color: textColor,
+                                             },
+                                             grid: {
+                                                 color: gridColor,
+                                             },
+                                         },
+                                         x: {
+                                             ticks: {
+                                                 color: textColor,
+                                             },
+                                             grid: {
+                                                 color: gridColor,
+                                             },
+                                         },
+                                     },
+                                 },
+                             };
+                         }
+                     }"
+                     x-init="
+                         $watch('$wire.dashboardData', () => {
+                             setTimeout(() => initCharts(), 100);
+                         });
+                         setTimeout(() => initCharts(), 100);
+                     ">
                     <div class="px-4 sm:px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
                         <flux:heading size="md" class="font-semibold text-neutral-900 dark:text-white">
                             Analytics
@@ -262,17 +493,8 @@ new class extends Component {
                                     <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white capitalize">
                                         {{ str_replace('_', ' ', $chartName) }}
                                     </flux:heading>
-                                    <!-- Placeholder for chart - in a real implementation, you'd use Chart.js or similar -->
-                                    <div class="flex h-64 items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-white dark:border-neutral-700 dark:bg-neutral-800">
-                                        <div class="text-center">
-                                            <flux:icon name="chart-bar" class="mx-auto h-12 w-12 text-neutral-400 dark:text-neutral-500" />
-                                            <flux:text class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-                                                Chart: {{ $chartName }}
-                                            </flux:text>
-                                            <flux:text class="text-xs text-neutral-400 dark:text-neutral-500">
-                                                Labels: {{ implode(', ', $chartData['labels'] ?? []) }}
-                                            </flux:text>
-                                        </div>
+                                    <div class="relative h-64" role="img" aria-label="Chart showing {{ str_replace('_', ' ', $chartName) }} data">
+                                        <canvas id="chart-{{ $chartName }}" aria-label="{{ str_replace('_', ' ', $chartName) }} chart"></canvas>
                                     </div>
                                 </div>
                             @endforeach

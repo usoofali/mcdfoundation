@@ -1,28 +1,45 @@
 <?php
 
-use App\Models\User;
+use App\Models\Lga;
 use App\Models\Role;
 use App\Models\State;
-use App\Models\Lga;
-use Livewire\Volt\Component;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app', ['title' => 'Create User'])] class extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
+
     public string $phone = '';
+
     public string $address = '';
+
     public string $state_id = '';
+
     public string $lga_id = '';
+
     public string $role_id = '';
+
     public string $status = 'active';
 
+    public string $account_number = '';
+
+    public string $account_name = '';
+
+    public string $bank_name = '';
+
     public array $roles = [];
+
     public array $states = [];
+
     public array $lgas = [];
 
     public function mount(): void
@@ -49,6 +66,9 @@ new #[Layout('components.layouts.app', ['title' => 'Create User'])] class extend
             'lga_id' => ['nullable', 'exists:lgas,id'],
             'role_id' => ['required', 'exists:roles,id'],
             'status' => ['required', 'in:active,inactive'],
+            'account_number' => ['required', 'string', 'max:50'],
+            'account_name' => ['required', 'string', 'max:255'],
+            'bank_name' => ['required', 'string', 'max:255'],
         ]);
 
         User::create([
@@ -61,6 +81,9 @@ new #[Layout('components.layouts.app', ['title' => 'Create User'])] class extend
             'lga_id' => $this->lga_id ?: null,
             'role_id' => $this->role_id,
             'status' => $this->status,
+            'account_number' => $this->account_number,
+            'account_name' => $this->account_name,
+            'bank_name' => $this->bank_name,
             'email_verified_at' => now(),
         ]);
 
@@ -138,6 +161,30 @@ new #[Layout('components.layouts.app', ['title' => 'Create User'])] class extend
                         label="{{ __('Address') }}" 
                         placeholder="{{ __('Enter address') }}"
                         rows="3"
+                    />
+                </div>
+
+                <!-- Account Details -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <flux:input 
+                        wire:model="account_number" 
+                        label="{{ __('Account Number') }}" 
+                        placeholder="{{ __('Enter account number') }}"
+                        required
+                    />
+                    
+                    <flux:input 
+                        wire:model="account_name" 
+                        label="{{ __('Account Name') }}" 
+                        placeholder="{{ __('Enter account name') }}"
+                        required
+                    />
+                    
+                    <flux:input 
+                        wire:model="bank_name" 
+                        label="{{ __('Bank Name') }}" 
+                        placeholder="{{ __('Enter bank name') }}"
+                        required
                     />
                 </div>
 

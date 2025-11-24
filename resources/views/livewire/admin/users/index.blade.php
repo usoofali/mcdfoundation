@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 
@@ -10,8 +10,11 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
     use WithPagination;
 
     public string $search = '';
+
     public string $roleFilter = '';
+
     public string $statusFilter = '';
+
     public array $roles = [];
 
     public function mount(): void
@@ -41,6 +44,7 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
                 'type' => 'error',
                 'message' => 'You cannot delete your own account.',
             ]);
+
             return;
         }
 
@@ -59,6 +63,7 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
                 'type' => 'error',
                 'message' => 'You cannot change your own status.',
             ]);
+
             return;
         }
 
@@ -76,8 +81,8 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
             ->with('role')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('email', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->roleFilter, function ($query) {
@@ -115,7 +120,7 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+        <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
             <!-- Search and Filters -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <flux:input 
@@ -217,23 +222,25 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
                                             </flux:button>
                                             
                                             @if($user->id !== auth()->id())
+                                                <flux:modal.trigger name="confirm-toggle-status-user-{{ $user->id }}">
                                                 <flux:button 
-                                                    wire:click="toggleUserStatus({{ $user->id }})"
                                                     size="sm" 
                                                     variant="{{ $user->status === 'active' ? 'danger' : 'primary' }}"
-                                                    wire:confirm="Are you sure you want to {{ $user->status === 'active' ? 'deactivate' : 'activate' }} this user?"
+                                                        wire:click="$dispatch('open-modal', 'confirm-toggle-status-user-{{ $user->id }}')"
                                                 >
                                                     {{ $user->status === 'active' ? __('Deactivate') : __('Activate') }}
                                                 </flux:button>
+                                                </flux:modal.trigger>
                                                 
+                                                <flux:modal.trigger name="confirm-delete-user-{{ $user->id }}">
                                                 <flux:button 
-                                                    wire:click="deleteUser({{ $user->id }})"
                                                     size="sm" 
                                                     variant="danger"
-                                                    wire:confirm="Are you sure you want to delete this user? This action cannot be undone."
+                                                        wire:click="$dispatch('open-modal', 'confirm-delete-user-{{ $user->id }}')"
                                                 >
                                                     {{ __('Delete') }}
                                                 </flux:button>
+                                                </flux:modal.trigger>
                                             @endif
                                         </div>
                                     </td>
@@ -253,7 +260,61 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
                     description="{{ __('No users match your current search criteria.') }}"
                 />
             @endif
-            </div>
         </div>
+        </div>
+
+        @foreach($users as $user)
+            @if($user->id !== auth()->id())
+                <!-- Status Toggle Modal -->
+                <flux:modal name="confirm-toggle-status-user-{{ $user->id }}" focusable class="max-w-lg">
+                    <div class="space-y-6">
+                        <div>
+                            <flux:heading size="lg">{{ __('Confirm Status Change') }}</flux:heading>
+                            <flux:subheading>
+                                {{ __('Are you sure you want to :action this user?', ['action' => $user->status === 'active' ? __('deactivate') : __('activate')]) }}
+                            </flux:subheading>
+                        </div>
+
+                        <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                            <flux:modal.close>
+                                <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                            </flux:modal.close>
+
+                            <flux:button 
+                                variant="{{ $user->status === 'active' ? 'danger' : 'primary' }}"
+                                wire:click="toggleUserStatus({{ $user->id }})"
+                            >
+                                {{ $user->status === 'active' ? __('Deactivate') : __('Activate') }}
+                            </flux:button>
+                        </div>
+                    </div>
+                </flux:modal>
+
+                <!-- Delete Modal -->
+                <flux:modal name="confirm-delete-user-{{ $user->id }}" focusable class="max-w-lg">
+                    <div class="space-y-6">
+                        <div>
+                            <flux:heading size="lg">{{ __('Confirm Deletion') }}</flux:heading>
+                            <flux:subheading>
+                                {{ __('Are you sure you want to delete this user? This action cannot be undone. All associated data will be permanently deleted.') }}
+                            </flux:subheading>
+                        </div>
+
+                        <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                            <flux:modal.close>
+                                <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                            </flux:modal.close>
+
+                            <flux:button 
+                                variant="danger" 
+                                wire:click="deleteUser({{ $user->id }})"
+                            >
+                                {{ __('Delete') }}
+                            </flux:button>
+                        </div>
+                    </div>
+                </flux:modal>
+            @endif
+        @endforeach
     </div>
 </div>

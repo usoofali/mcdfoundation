@@ -3,7 +3,8 @@
 use App\Models\Contribution;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app', ['title' => 'Contribution Details'])] class extends Component {
+new #[Layout('components.layouts.app', ['title' => 'Contribution Details'])] class extends Component
+{
     public Contribution $contribution;
 
     public function mount(Contribution $contribution): void
@@ -17,17 +18,34 @@ new #[Layout('components.layouts.app', ['title' => 'Contribution Details'])] cla
         <!-- Header -->
         <div class="bg-white dark:bg-zinc-800 shadow rounded-lg">
             <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Contribution Details</h3>
                         <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Receipt: {{ $contribution->receipt_number }}</p>
                     </div>
-                    <div class="flex space-x-3">
-                        <flux:button variant="outline" href="{{ route('contributions.index') }}">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <flux:button variant="outline" href="{{ route('contributions.index') }}" class="w-full sm:w-auto">
                             Back to List
                         </flux:button>
+                        <flux:button 
+                            variant="outline" 
+                            icon="document-arrow-down" 
+                            href="{{ route('contributions.receipt.download', $contribution) }}"
+                            class="w-full sm:w-auto"
+                        >
+                            Download Receipt
+                        </flux:button>
+                        <flux:button 
+                            variant="outline" 
+                            icon="printer" 
+                            href="{{ route('contributions.receipt.print', $contribution) }}"
+                            target="_blank"
+                            class="w-full sm:w-auto"
+                        >
+                            Print Receipt
+                        </flux:button>
                         @if($contribution->status === 'pending')
-                            <flux:button variant="primary" href="{{ route('contributions.edit', $contribution) }}">
+                            <flux:button variant="primary" href="{{ route('contributions.edit', $contribution) }}" class="w-full sm:w-auto">
                                 Edit
                             </flux:button>
                         @endif

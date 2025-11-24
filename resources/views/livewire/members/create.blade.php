@@ -1,49 +1,80 @@
 <?php
 
-use App\Models\Member;
-use App\Models\State;
-use App\Models\Lga;
-use App\Models\HealthcareProvider;
 use App\Models\ContributionPlan;
+use App\Models\HealthcareProvider;
+use App\Models\Lga;
+use App\Models\Member;
+use App\Models\Role;
+use App\Models\State;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class extends Component {
+new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class extends Component
+{
     use WithFileUploads;
 
     // Form data
     public string $full_name = '';
+
     public string $family_name = '';
+
     public string $date_of_birth = '';
+
     public string $marital_status = '';
+
     public string $gender = '';
+
     public string $nin = '';
+
     public string $occupation = '';
+
     public string $workplace = '';
+
     public string $address = '';
+
     public string $hometown = '';
+
     public string $state_id = '';
+
     public string $lga_id = '';
+
     public string $country = 'Nigeria';
+
     public string $healthcare_provider_id = '';
+
     public string $health_status = '';
+
     public string $contribution_plan_id = '';
+
     public string $phone = '';
+
     public string $email = '';
+
+    public string $password = '';
+
     public $photo;
+
     public string $notes = '';
 
     // Form state
     public int $currentStep = 1;
+
     public bool $isPreRegistration = true;
+
     public bool $isComplete = false;
 
     // Options
     public $states;
+
     public $lgas = [];
+
     public $healthcareProviders;
+
     public $contributionPlans;
 
     public function mount(): void
@@ -72,7 +103,7 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
 
     public function toggleRegistrationType(): void
     {
-        $this->isPreRegistration = !$this->isPreRegistration;
+        $this->isPreRegistration = ! $this->isPreRegistration;
         $this->currentStep = 1;
     }
 
@@ -101,7 +132,8 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
                 'health_status' => 'nullable|string',
                 'contribution_plan_id' => 'nullable|exists:contribution_plans,id',
                 'phone' => 'nullable|string|max:20',
-                'email' => 'nullable|email|max:150',
+                'email' => 'required|email|max:255|unique:users,email',
+                'password' => ['required', 'string', Password::default()],
                 'photo' => 'nullable|image|max:2048|mimes:jpg,jpeg,png',
                 'notes' => 'nullable|string',
             ]);
@@ -112,40 +144,69 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
     {
         $this->validateStep();
 
-        $data = [
-            'full_name' => $this->full_name,
-            'family_name' => $this->family_name,
-            'date_of_birth' => $this->date_of_birth,
-            'marital_status' => $this->marital_status,
-            'nin' => $this->nin,
-            'occupation' => $this->occupation,
-            'workplace' => $this->workplace,
-            'address' => $this->address,
-            'hometown' => $this->hometown,
-            'state_id' => $this->state_id,
-            'lga_id' => $this->lga_id,
-            'country' => $this->country,
-            'healthcare_provider_id' => $this->healthcare_provider_id ?: null,
-            'health_status' => $this->health_status,
-            'contribution_plan_id' => $this->contribution_plan_id ?: null,
-            'registration_date' => now()->toDateString(),
-            'created_by' => Auth::id(),
-            'is_complete' => !$this->isPreRegistration,
-            'status' => $this->isPreRegistration ? 'pre_registered' : 'pending',
-            'notes' => $this->notes,
-        ];
+        // Get member role
+        $memberRole = Role::where('name', 'member')->first();
 
-        // Handle photo upload
-        if ($this->photo) {
-            $data['photo_path'] = $this->photo->store('member-photos', 'public');
+        if (! $memberRole) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Member role not found. Please contact administrator.',
+            ]);
+
+            return;
         }
 
-        $member = Member::create($data);
+        $member = DB::transaction(function () use ($memberRole) {
+            // Create User first
+            $user = User::create([
+                'name' => $this->full_name.' '.$this->family_name,
+                'email' => $this->email,
+                'password' => Hash::make($this->password),
+                'role_id' => $memberRole->id,
+                'phone' => $this->phone ?: null,
+                'address' => $this->address,
+                'state_id' => $this->state_id ? (int) $this->state_id : null,
+                'lga_id' => $this->lga_id ? (int) $this->lga_id : null,
+            ]);
+
+            // Prepare member data
+            $memberData = [
+                'user_id' => $user->id,
+                'full_name' => $this->full_name,
+                'family_name' => $this->family_name,
+                'date_of_birth' => $this->date_of_birth,
+                'marital_status' => $this->marital_status,
+                'nin' => $this->nin,
+                'occupation' => $this->occupation,
+                'workplace' => $this->workplace,
+                'address' => $this->address,
+                'hometown' => $this->hometown,
+                'state_id' => $this->state_id ? (int) $this->state_id : null,
+                'lga_id' => $this->lga_id ? (int) $this->lga_id : null,
+                'country' => $this->country,
+                'healthcare_provider_id' => $this->healthcare_provider_id ? (int) $this->healthcare_provider_id : null,
+                'health_status' => $this->health_status,
+                'contribution_plan_id' => $this->contribution_plan_id ? (int) $this->contribution_plan_id : null,
+                'registration_date' => now()->toDateString(),
+                'created_by' => Auth::id(),
+                'is_complete' => ! $this->isPreRegistration,
+                'status' => $this->isPreRegistration ? 'pre_registered' : 'pending',
+                'notes' => $this->notes,
+            ];
+
+            // Handle photo upload
+            if ($this->photo) {
+                $memberData['photo_path'] = $this->photo->store('member-photos', 'public');
+            }
+
+            // Create Member linked to User
+            return Member::create($memberData);
+        });
 
         if ($this->isPreRegistration) {
-            session()->flash('success', 'Member pre-registered successfully. Complete registration later.');
+            session()->flash('success', 'Member pre-registered successfully with user account. Complete registration later.');
         } else {
-            session()->flash('success', 'Member registered successfully. Awaiting approval.');
+            session()->flash('success', 'Member registered successfully with user account. Awaiting approval.');
         }
 
         $this->redirect(route('members.show', $member));
@@ -400,6 +461,14 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
                                 wire:model="email" 
                                 type="email" 
                                 label="Email Address"
+                                required
+                            />
+                            
+                            <flux:input 
+                                wire:model="password" 
+                                type="password" 
+                                label="Password"
+                                required
                             />
                             
                             <flux:input 

@@ -6,12 +6,15 @@ use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
-    use WithPagination;
+new class extends Component
+{
     use AuthorizesRequests;
+    use WithPagination;
 
     public string $search = '';
+
     public ?string $status = null;
+
     public ?int $memberId = null;
 
     public function mount(): void
@@ -33,12 +36,12 @@ new class extends Component {
     public function loans()
     {
         return Loan::query()
-            ->with(['member', 'approvedBy', 'disbursedBy'])
+            ->with(['member', 'approver'])
             ->when($this->search, function ($query) {
                 $query->whereHas('member', function ($q) {
-                    $q->where('first_name', 'like', '%' . $this->search . '%')
-                        ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                        ->orWhere('registration_no', 'like', '%' . $this->search . '%');
+                    $q->where('first_name', 'like', '%'.$this->search.'%')
+                        ->orWhere('last_name', 'like', '%'.$this->search.'%')
+                        ->orWhere('registration_no', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->status, fn ($query) => $query->where('status', $this->status))

@@ -144,7 +144,7 @@ class DashboardService
             'stats' => $this->getMemberStats($member),
             'recent_activities' => $this->getMemberRecentActivities($member),
             'pending_approvals' => new Collection,
-            'quick_actions' => $this->getMemberQuickActions(),
+            'quick_actions' => $this->getMemberQuickActions($user),
             'charts' => $this->getMemberCharts($member),
         ];
     }
@@ -561,22 +561,43 @@ class DashboardService
 
     /**
      * Get pending approvals.
+     *
+     * @param  array  $filters  Filter options:
+     *                          - 'level': Approval level (1 = LG, 2 = State, 3 = Project)
+     *                          - 'state_id': Filter by state ID
+     *                          - 'lga_id': Filter by LGA ID
      */
     protected function getPendingApprovals(array $filters = []): Collection
     {
         $query = Loan::where('status', 'pending')->with(['member']);
 
+        // Filter by approval level
+        // Level 1: LG Coordinator (filters by LGA)
+        // Level 2: State Coordinator (filters by State)
+        // Level 3: Project Coordinator (shows all)
         if (isset($filters['level'])) {
-            // This would need to be implemented based on approval levels
+            $level = $filters['level'];
+            if ($level == 1 && isset($filters['lga_id'])) {
+                // LG level - only show loans from members in this LGA
+                $query->whereHas('member', function ($q) use ($filters) {
+                    $q->where('lga_id', $filters['lga_id']);
+                });
+            } elseif ($level == 2 && isset($filters['state_id'])) {
+                // State level - show loans from members in this state (but not filtered to specific LGA)
+                $query->whereHas('member', function ($q) use ($filters) {
+                    $q->where('state_id', $filters['state_id']);
+                });
+            }
+            // Level 3 (Project Coordinator) shows all pending loans, no additional filtering needed
         }
 
-        if (isset($filters['state_id'])) {
+        if (isset($filters['state_id']) && ! isset($filters['level'])) {
             $query->whereHas('member', function ($q) use ($filters) {
                 $q->where('state_id', $filters['state_id']);
             });
         }
 
-        if (isset($filters['lga_id'])) {
+        if (isset($filters['lga_id']) && ! isset($filters['level'])) {
             $query->whereHas('member', function ($q) use ($filters) {
                 $q->where('lga_id', $filters['lga_id']);
             });
@@ -618,7 +639,7 @@ class DashboardService
             ['title' => 'Add Member', 'url' => route('members.create'), 'icon' => 'user-plus', 'color' => 'blue'],
             ['title' => 'Record Contribution', 'url' => route('contributions.create'), 'icon' => 'currency-dollar', 'color' => 'green'],
             ['title' => 'View Reports', 'url' => route('reports.index'), 'icon' => 'chart-bar', 'color' => 'purple'],
-            ['title' => 'Manage Users', 'url' => '#', 'icon' => 'users', 'color' => 'gray'],
+            ['title' => 'Manage Users', 'url' => route('admin.users.index'), 'icon' => 'users', 'color' => 'gray'],
         ];
     }
 
@@ -655,9 +676,9 @@ class DashboardService
     protected function getHealthOfficerQuickActions(): array
     {
         return [
-            ['title' => 'Approve Claims', 'url' => '#', 'icon' => 'check-circle', 'color' => 'green'],
-            ['title' => 'Check Eligibility', 'url' => '#', 'icon' => 'heart', 'color' => 'red'],
-            ['title' => 'View Claims', 'url' => '#', 'icon' => 'document-text', 'color' => 'blue'],
+            ['title' => 'Approve Claims', 'url' => route('contributions.verify'), 'icon' => 'check-circle', 'color' => 'green'],
+            ['title' => 'Check Eligibility', 'url' => route('members.index'), 'icon' => 'heart', 'color' => 'red'],
+            ['title' => 'View Claims', 'url' => route('contributions.index'), 'icon' => 'document-text', 'color' => 'blue'],
         ];
     }
 
@@ -665,19 +686,23 @@ class DashboardService
     {
         return [
             ['title' => 'Verify Contributions', 'url' => route('contributions.verify'), 'icon' => 'check-circle', 'color' => 'green'],
-            ['title' => 'Process Payments', 'url' => '#', 'icon' => 'currency-dollar', 'color' => 'green'],
-            ['title' => 'View Fund Ledger', 'url' => '#', 'icon' => 'wallet', 'color' => 'purple'],
+            ['title' => 'Process Payments', 'url' => route('contributions.verify'), 'icon' => 'currency-dollar', 'color' => 'green'],
+            ['title' => 'View Fund Ledger', 'url' => route('reports.index'), 'icon' => 'wallet', 'color' => 'purple'],
             ['title' => 'Disburse Loans', 'url' => route('loans.index'), 'icon' => 'banknotes', 'color' => 'blue'],
         ];
     }
 
-    protected function getMemberQuickActions(): array
+    protected function getMemberQuickActions(User $user): array
     {
+        $profileUrl = $user->member
+            ? route('members.show', $user->member)
+            : route('profile.edit');
+
         return [
             ['title' => 'Submit Contribution', 'url' => route('contributions.submit'), 'icon' => 'currency-dollar', 'color' => 'green'],
             ['title' => 'Apply for Loan', 'url' => route('loans.create'), 'icon' => 'banknotes', 'color' => 'blue'],
-            ['title' => 'Submit Health Claim', 'url' => '#', 'icon' => 'heart', 'color' => 'red'],
-            ['title' => 'View My Profile', 'url' => '#', 'icon' => 'user', 'color' => 'gray'],
+            ['title' => 'Submit Health Claim', 'url' => route('contributions.submit'), 'icon' => 'heart', 'color' => 'red'],
+            ['title' => 'View My Profile', 'url' => $profileUrl, 'icon' => 'user', 'color' => 'gray'],
         ];
     }
 
@@ -748,194 +773,429 @@ class DashboardService
     /**
      * Helper methods for trend calculations and chart data.
      */
-    protected function getMemberTrend(): ?string
-    {
-        $thisMonth = Member::whereMonth('created_at', now()->month)->count();
-        $lastMonth = Member::whereMonth('created_at', now()->subMonth()->month)->count();
 
-        if ($lastMonth == 0) {
-            return null;
+    /**
+     * Format trend value with proper handling of edge cases.
+     */
+    protected function formatTrend(float $thisPeriod, float $lastPeriod): ?string
+    {
+        if ($lastPeriod == 0) {
+            return $thisPeriod > 0 ? 'New' : null;
         }
 
-        $change = (($thisMonth - $lastMonth) / $lastMonth) * 100;
+        $change = (($thisPeriod - $lastPeriod) / $lastPeriod) * 100;
+        $formattedChange = number_format($change, 1);
 
-        return $change > 0 ? "+{$change}%" : "{$change}%";
-    }
-
-    protected function getActiveMemberTrend(): ?string
-    {
-        $thisMonth = Member::where('status', 'active')->whereMonth('updated_at', now()->month)->count();
-        $lastMonth = Member::where('status', 'active')->whereMonth('updated_at', now()->subMonth()->month)->count();
-
-        if ($lastMonth == 0) {
-            return null;
+        if ($change > 0) {
+            return "+{$formattedChange}%";
+        } elseif ($change < 0) {
+            return "{$formattedChange}%";
         }
 
-        $change = (($thisMonth - $lastMonth) / $lastMonth) * 100;
-
-        return $change > 0 ? "+{$change}%" : "{$change}%";
-    }
-
-    protected function getContributionTrend(): ?string
-    {
-        $thisMonth = Contribution::where('status', 'paid')->whereMonth('payment_date', now()->month)->sum('amount');
-        $lastMonth = Contribution::where('status', 'paid')->whereMonth('payment_date', now()->subMonth()->month)->sum('amount');
-
-        if ($lastMonth == 0) {
-            return null;
-        }
-
-        $change = (($thisMonth - $lastMonth) / $lastMonth) * 100;
-
-        return $change > 0 ? "+{$change}%" : "{$change}%";
-    }
-
-    protected function getLoanTrend(): ?string
-    {
-        $thisMonth = Loan::whereMonth('created_at', now()->month)->sum('amount');
-        $lastMonth = Loan::whereMonth('created_at', now()->subMonth()->month)->sum('amount');
-
-        if ($lastMonth == 0) {
-            return null;
-        }
-
-        $change = (($thisMonth - $lastMonth) / $lastMonth) * 100;
-
-        return $change > 0 ? "+{$change}%" : "{$change}%";
-    }
-
-    protected function getClaimTrend(): ?string
-    {
-        $thisMonth = HealthClaim::whereMonth('claim_date', now()->month)->sum('covered_amount');
-        $lastMonth = HealthClaim::whereMonth('claim_date', now()->subMonth()->month)->sum('covered_amount');
-
-        if ($lastMonth == 0) {
-            return null;
-        }
-
-        $change = (($thisMonth - $lastMonth) / $lastMonth) * 100;
-
-        return $change > 0 ? "+{$change}%" : "{$change}%";
-    }
-
-    protected function getFundTrend(): ?string
-    {
-        $thisMonth = FundLedger::whereMonth('transaction_date', now()->month)->where('type', 'inflow')->sum('amount');
-        $lastMonth = FundLedger::whereMonth('transaction_date', now()->subMonth()->month)->where('type', 'inflow')->sum('amount');
-
-        if ($lastMonth == 0) {
-            return null;
-        }
-
-        $change = (($thisMonth - $lastMonth) / $lastMonth) * 100;
-
-        return $change > 0 ? "+{$change}%" : "{$change}%";
+        return '0%';
     }
 
     /**
-     * Chart data methods (simplified for now).
+     * Get member growth trend.
+     */
+    protected function getMemberTrend(): ?string
+    {
+        $thisMonth = Member::whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->count();
+
+        $lastMonth = Member::whereYear('created_at', now()->subMonth()->year)
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->count();
+
+        return $this->formatTrend($thisMonth, $lastMonth);
+    }
+
+    /**
+     * Get active member trend.
+     */
+    protected function getActiveMemberTrend(): ?string
+    {
+        $thisMonth = Member::where('status', 'active')
+            ->whereYear('updated_at', now()->year)
+            ->whereMonth('updated_at', now()->month)
+            ->count();
+
+        $lastMonth = Member::where('status', 'active')
+            ->whereYear('updated_at', now()->subMonth()->year)
+            ->whereMonth('updated_at', now()->subMonth()->month)
+            ->count();
+
+        return $this->formatTrend($thisMonth, $lastMonth);
+    }
+
+    /**
+     * Get contribution trend.
+     */
+    protected function getContributionTrend(): ?string
+    {
+        $thisMonth = Contribution::where('status', 'paid')
+            ->whereYear('payment_date', now()->year)
+            ->whereMonth('payment_date', now()->month)
+            ->sum('amount');
+
+        $lastMonth = Contribution::where('status', 'paid')
+            ->whereYear('payment_date', now()->subMonth()->year)
+            ->whereMonth('payment_date', now()->subMonth()->month)
+            ->sum('amount');
+
+        return $this->formatTrend($thisMonth, $lastMonth);
+    }
+
+    /**
+     * Get loan trend.
+     */
+    protected function getLoanTrend(): ?string
+    {
+        $thisMonth = Loan::whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
+
+        $lastMonth = Loan::whereYear('created_at', now()->subMonth()->year)
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->sum('amount');
+
+        return $this->formatTrend($thisMonth, $lastMonth);
+    }
+
+    /**
+     * Get health claim trend.
+     */
+    protected function getClaimTrend(): ?string
+    {
+        $thisMonth = HealthClaim::whereYear('claim_date', now()->year)
+            ->whereMonth('claim_date', now()->month)
+            ->sum('covered_amount');
+
+        $lastMonth = HealthClaim::whereYear('claim_date', now()->subMonth()->year)
+            ->whereMonth('claim_date', now()->subMonth()->month)
+            ->sum('covered_amount');
+
+        return $this->formatTrend($thisMonth, $lastMonth);
+    }
+
+    /**
+     * Get fund trend.
+     */
+    protected function getFundTrend(): ?string
+    {
+        $thisMonth = FundLedger::whereYear('transaction_date', now()->year)
+            ->whereMonth('transaction_date', now()->month)
+            ->where('type', 'inflow')
+            ->sum('amount');
+
+        $lastMonth = FundLedger::whereYear('transaction_date', now()->subMonth()->year)
+            ->whereMonth('transaction_date', now()->subMonth()->month)
+            ->where('type', 'inflow')
+            ->sum('amount');
+
+        return $this->formatTrend($thisMonth, $lastMonth);
+    }
+
+    /**
+     * Get contribution trend data for the last 6 months.
      */
     protected function getContributionTrendData(): array
     {
+        $months = collect(range(5, 0))->map(function ($monthsAgo) {
+            return now()->subMonths($monthsAgo);
+        });
+
+        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+
+        $data = $months->map(function ($date) {
+            return Contribution::where('status', 'paid')
+                ->whereYear('payment_date', $date->year)
+                ->whereMonth('payment_date', $date->month)
+                ->sum('amount');
+        })->toArray();
+
         return [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [10000, 15000, 12000, 18000, 20000, 22000],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get loan distribution data by status.
+     */
     protected function getLoanDistributionData(): array
     {
+        $statuses = ['pending', 'approved', 'disbursed', 'repaid', 'defaulted'];
+
+        $labels = array_map('ucfirst', $statuses);
+
+        $data = array_map(function ($status) {
+            return Loan::where('status', $status)->count();
+        }, $statuses);
+
         return [
-            'labels' => ['Pending', 'Approved', 'Disbursed', 'Repaid'],
-            'data' => [5, 10, 15, 25],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get member growth data for the last 6 months.
+     */
     protected function getMemberGrowthData(): array
     {
+        $months = collect(range(5, 0))->map(function ($monthsAgo) {
+            return now()->subMonths($monthsAgo);
+        });
+
+        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+
+        $data = $months->map(function ($date) {
+            return Member::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+        })->toArray();
+
         return [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [50, 75, 100, 125, 150, 175],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get loan approval trend data for the last 4 weeks.
+     */
     protected function getApprovalTrendData(): array
     {
+        $weeks = collect(range(3, 0))->map(function ($weeksAgo) {
+            $start = now()->subWeeks($weeksAgo)->startOfWeek();
+            $end = $start->copy()->endOfWeek();
+
+            return ['start' => $start, 'end' => $end, 'label' => 'Week '.($weeksAgo + 1)];
+        });
+
+        $labels = $weeks->pluck('label')->toArray();
+
+        $data = $weeks->map(function ($week) {
+            return Loan::where('status', 'approved')
+                ->whereBetween('approval_date', [$week['start'], $week['end']])
+                ->count();
+        })->toArray();
+
         return [
-            'labels' => ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            'data' => [3, 5, 2, 7],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get loan status distribution data.
+     */
     protected function getLoanStatusData(): array
     {
+        $statuses = ['pending', 'approved', 'disbursed', 'repaid', 'defaulted'];
+
+        $labels = array_map('ucfirst', $statuses);
+
+        $data = array_map(function ($status) {
+            return Loan::where('status', $status)->count();
+        }, $statuses);
+
         return [
-            'labels' => ['Pending', 'Approved', 'Disbursed', 'Repaid'],
-            'data' => [8, 12, 20, 35],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get state member distribution data by status.
+     */
     protected function getStateMemberData(?int $stateId): array
     {
+        $baseQuery = Member::query();
+        if ($stateId) {
+            $baseQuery->where('state_id', $stateId);
+        }
+
+        $labels = ['Active', 'Inactive', 'Pending'];
+
+        $data = [
+            (clone $baseQuery)->where('status', 'active')->count(),
+            (clone $baseQuery)->where('status', 'inactive')->count(),
+            (clone $baseQuery)->where('status', 'pending')->count(),
+        ];
+
         return [
-            'labels' => ['Active', 'Inactive', 'Pending'],
-            'data' => [100, 20, 5],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get state contribution data for the last 6 months.
+     */
     protected function getStateContributionData(?int $stateId): array
     {
+        $months = collect(range(5, 0))->map(function ($monthsAgo) {
+            return now()->subMonths($monthsAgo);
+        });
+
+        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+
+        $data = $months->map(function ($date) use ($stateId) {
+            $query = Contribution::where('status', 'paid')
+                ->whereYear('payment_date', $date->year)
+                ->whereMonth('payment_date', $date->month);
+
+            if ($stateId) {
+                $query->whereHas('member', function ($q) use ($stateId) {
+                    $q->where('state_id', $stateId);
+                });
+            }
+
+            return $query->sum('amount');
+        })->toArray();
+
         return [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [5000, 7500, 6000, 9000, 10000, 11000],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get LGA member distribution data by status.
+     */
     protected function getLgaMemberData(?int $lgaId): array
     {
+        $baseQuery = Member::query();
+        if ($lgaId) {
+            $baseQuery->where('lga_id', $lgaId);
+        }
+
+        $labels = ['Active', 'Inactive', 'Pending'];
+
+        $data = [
+            (clone $baseQuery)->where('status', 'active')->count(),
+            (clone $baseQuery)->where('status', 'inactive')->count(),
+            (clone $baseQuery)->where('status', 'pending')->count(),
+        ];
+
         return [
-            'labels' => ['Active', 'Inactive', 'Pending'],
-            'data' => [25, 5, 2],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get LGA contribution data for the last 6 months.
+     */
     protected function getLgaContributionData(?int $lgaId): array
     {
+        $months = collect(range(5, 0))->map(function ($monthsAgo) {
+            return now()->subMonths($monthsAgo);
+        });
+
+        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+
+        $data = $months->map(function ($date) use ($lgaId) {
+            $query = Contribution::where('status', 'paid')
+                ->whereYear('payment_date', $date->year)
+                ->whereMonth('payment_date', $date->month);
+
+            if ($lgaId) {
+                $query->whereHas('member', function ($q) use ($lgaId) {
+                    $q->where('lga_id', $lgaId);
+                });
+            }
+
+            return $query->sum('amount');
+        })->toArray();
+
         return [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [1000, 1500, 1200, 1800, 2000, 2200],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get health claim data by type.
+     */
     protected function getClaimTypeData(): array
     {
+        $claimTypes = ['outpatient', 'inpatient', 'surgery', 'maternity'];
+
+        $labels = array_map('ucfirst', $claimTypes);
+
+        $data = array_map(function ($type) {
+            return HealthClaim::where('claim_type', $type)->count();
+        }, $claimTypes);
+
         return [
-            'labels' => ['Outpatient', 'Inpatient', 'Surgery', 'Maternity'],
-            'data' => [15, 8, 3, 5],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get health claim trend data for the last 6 months.
+     */
     protected function getClaimTrendData(): array
     {
+        $months = collect(range(5, 0))->map(function ($monthsAgo) {
+            return now()->subMonths($monthsAgo);
+        });
+
+        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+
+        $data = $months->map(function ($date) {
+            return HealthClaim::whereYear('claim_date', $date->year)
+                ->whereMonth('claim_date', $date->month)
+                ->sum('covered_amount');
+        })->toArray();
+
         return [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [2000, 3000, 2500, 4000, 3500, 4500],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 
+    /**
+     * Get fund flow data (inflows vs outflows).
+     */
     protected function getFundFlowData(): array
     {
+        $labels = ['Inflows', 'Outflows'];
+
+        $inflows = FundLedger::where('type', 'inflow')->sum('amount');
+        $outflows = FundLedger::where('type', 'outflow')->sum('amount');
+
         return [
-            'labels' => ['Inflows', 'Outflows'],
-            'data' => [50000, 30000],
+            'labels' => $labels,
+            'data' => [$inflows, $outflows],
         ];
     }
 
+    /**
+     * Get monthly transaction data for the last 6 months.
+     */
     protected function getMonthlyTransactionData(): array
     {
+        $months = collect(range(5, 0))->map(function ($monthsAgo) {
+            return now()->subMonths($monthsAgo);
+        });
+
+        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+
+        $data = $months->map(function ($date) {
+            return FundLedger::whereYear('transaction_date', $date->year)
+                ->whereMonth('transaction_date', $date->month)
+                ->sum('amount');
+        })->toArray();
+
         return [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [10000, 15000, 12000, 18000, 20000, 22000],
+            'labels' => $labels,
+            'data' => $data,
         ];
     }
 

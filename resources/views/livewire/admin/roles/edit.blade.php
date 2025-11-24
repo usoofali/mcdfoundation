@@ -1,31 +1,38 @@
 <?php
 
-use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Role;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app', ['title' => 'Edit Role'])] class extends Component
 {
     public Role $role;
-    
+
     public string $name = '';
+
     public string $description = '';
+
     public array $permissions = [];
+
     public array $availablePermissions = [];
 
     public function mount(Role $role): void
     {
+        Gate::authorize('update', $role);
         $this->role = $role;
         $this->name = $role->name;
         $this->description = $role->description ?? '';
         $this->permissions = $role->permissions->pluck('id')->toArray();
-        $this->availablePermissions = Permission::orderBy('name')->get()->toArray();
+        $this->availablePermissions = Permission::orderBy('module')->orderBy('name')->get()->toArray();
     }
 
     public function save(): void
     {
+        Gate::authorize('update', $this->role);
+
         $this->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name,' . $this->role->id],
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name,'.$this->role->id],
             'description' => ['nullable', 'string', 'max:500'],
             'permissions' => ['array'],
             'permissions.*' => ['exists:permissions,id'],
@@ -38,10 +45,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Role'])] class extends 
 
         $this->role->permissions()->sync($this->permissions);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Role updated successfully.',
-        ]);
+        session()->flash('success', 'Role updated successfully.');
 
         $this->redirect(route('admin.roles.show', $this->role), navigate: true);
     }
@@ -85,17 +89,27 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Role'])] class extends 
                 <!-- Permissions -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('Permissions') }}</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        @foreach($availablePermissions as $permission)
-                            <div class="flex items-center">
-                                <flux:checkbox 
-                                    wire:model="permissions" 
-                                    value="{{ $permission['id'] }}"
-                                    id="permission_{{ $permission['id'] }}"
-                                />
-                                <label for="permission_{{ $permission['id'] }}" class="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
-                                    {{ $permission['name'] }}
-                                </label>
+                    @php
+                        $permissionsByModule = collect($availablePermissions)->groupBy('module');
+                    @endphp
+                    <div class="space-y-6">
+                        @foreach($permissionsByModule as $module => $permissions)
+                            <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
+                                <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-3">{{ $module ?? __('Other') }}</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    @foreach($permissions as $permission)
+                                        <div class="flex items-center">
+                                            <flux:checkbox 
+                                                wire:model="permissions" 
+                                                value="{{ $permission['id'] }}"
+                                                id="permission_{{ $permission['id'] }}"
+                                            />
+                                            <label for="permission_{{ $permission['id'] }}" class="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
+                                                {{ $permission['name'] }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         @endforeach
                     </div>

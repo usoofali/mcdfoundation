@@ -6,11 +6,13 @@ use App\Models\Contribution;
 use App\Models\Dependent;
 use App\Models\Loan;
 use App\Models\Member;
+use App\Models\Role;
 use App\Models\User;
 use App\Policies\ContributionPolicy;
 use App\Policies\DependentPolicy;
 use App\Policies\LoanPolicy;
 use App\Policies\MemberPolicy;
+use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         Contribution::class => ContributionPolicy::class,
         Loan::class => LoanPolicy::class,
         User::class => UserPolicy::class,
+        Role::class => RolePolicy::class,
     ];
 
     /**

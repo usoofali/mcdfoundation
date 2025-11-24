@@ -32,6 +32,9 @@ class User extends Authenticatable
         'state_id',
         'lga_id',
         'status',
+        'account_number',
+        'account_name',
+        'bank_name',
     ];
 
     /**

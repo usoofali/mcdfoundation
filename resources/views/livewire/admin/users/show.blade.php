@@ -19,15 +19,13 @@ new #[Layout('components.layouts.app', ['title' => 'User Details'])] class exten
                 'type' => 'error',
                 'message' => 'You cannot delete your own account.',
             ]);
+
             return;
         }
 
         $this->user->delete();
-        
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'User deleted successfully.',
-        ]);
+
+        session()->flash('success', 'User deleted successfully.');
 
         $this->redirect(route('admin.users.index'), navigate: true);
     }
@@ -39,11 +37,12 @@ new #[Layout('components.layouts.app', ['title' => 'User Details'])] class exten
                 'type' => 'error',
                 'message' => 'You cannot change your own status.',
             ]);
+
             return;
         }
 
         $this->user->update(['status' => $this->user->status === 'active' ? 'inactive' : 'active']);
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => 'User status updated successfully.',
@@ -91,21 +90,23 @@ new #[Layout('components.layouts.app', ['title' => 'User Details'])] class exten
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     @if($user->id !== auth()->id())
-                        <flux:button 
-                            wire:click="toggleStatus"
-                            variant="{{ $user->status === 'active' ? 'danger' : 'primary' }}"
-                            wire:confirm="Are you sure you want to {{ $user->status === 'active' ? 'deactivate' : 'activate' }} this user?"
-                        >
-                            {{ $user->status === 'active' ? __('Deactivate') : __('Activate') }}
-                        </flux:button>
+                        <flux:modal.trigger name="confirm-toggle-status-user-{{ $user->id }}">
+                            <flux:button 
+                                variant="{{ $user->status === 'active' ? 'danger' : 'primary' }}"
+                                wire:click="$dispatch('open-modal', 'confirm-toggle-status-user-{{ $user->id }}')"
+                            >
+                                {{ $user->status === 'active' ? __('Deactivate') : __('Activate') }}
+                            </flux:button>
+                        </flux:modal.trigger>
                         
-                        <flux:button 
-                            wire:click="deleteUser"
-                            variant="danger"
-                            wire:confirm="Are you sure you want to delete this user? This action cannot be undone."
-                        >
-                            {{ __('Delete User') }}
-                        </flux:button>
+                        <flux:modal.trigger name="confirm-delete-user-{{ $user->id }}">
+                            <flux:button 
+                                variant="danger"
+                                wire:click="$dispatch('open-modal', 'confirm-delete-user-{{ $user->id }}')"
+                            >
+                                {{ __('Delete User') }}
+                            </flux:button>
+                        </flux:modal.trigger>
                     @endif
                 </div>
             </div>
@@ -131,6 +132,25 @@ new #[Layout('components.layouts.app', ['title' => 'User Details'])] class exten
                         <div>
                             <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Address') }}</dt>
                             <dd class="text-sm text-gray-900 dark:text-white">{{ $user->address ?? 'Not provided' }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Account Details -->
+                <div class="bg-neutral-50 dark:bg-neutral-900 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ __('Account Details') }}</h3>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Account Number') }}</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ $user->account_number ?? 'Not provided' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Account Name') }}</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ $user->account_name ?? 'Not provided' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ __('Bank Name') }}</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ $user->bank_name ?? 'Not provided' }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -205,4 +225,56 @@ new #[Layout('components.layouts.app', ['title' => 'User Details'])] class exten
             </div>
         </div>
     </div>
+
+    @if($user->id !== auth()->id())
+        <!-- Status Toggle Modal -->
+        <flux:modal name="confirm-toggle-status-user-{{ $user->id }}" focusable class="max-w-lg">
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Confirm Status Change') }}</flux:heading>
+                    <flux:subheading>
+                        {{ __('Are you sure you want to :action this user?', ['action' => $user->status === 'active' ? __('deactivate') : __('activate')]) }}
+                    </flux:subheading>
+                </div>
+
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <flux:modal.close>
+                        <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+
+                    <flux:button 
+                        variant="{{ $user->status === 'active' ? 'danger' : 'primary' }}"
+                        wire:click="toggleStatus"
+                    >
+                        {{ $user->status === 'active' ? __('Deactivate') : __('Activate') }}
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
+
+        <!-- Delete Modal -->
+        <flux:modal name="confirm-delete-user-{{ $user->id }}" focusable class="max-w-lg">
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">{{ __('Confirm Deletion') }}</flux:heading>
+                    <flux:subheading>
+                        {{ __('Are you sure you want to delete this user? This action cannot be undone. All associated data will be permanently deleted.') }}
+                    </flux:subheading>
+                </div>
+
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <flux:modal.close>
+                        <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+
+                    <flux:button 
+                        variant="danger" 
+                        wire:click="deleteUser"
+                    >
+                        {{ __('Delete') }}
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
+    @endif
 </div>

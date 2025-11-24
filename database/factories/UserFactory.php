@@ -31,6 +31,14 @@ class UserFactory extends Factory
             'two_factor_secret' => Str::random(10),
             'two_factor_recovery_codes' => Str::random(10),
             'two_factor_confirmed_at' => now(),
+            'account_number' => fake()->numerify('##########'),
+            'account_name' => fake()->name(),
+            'bank_name' => fake()->randomElement([
+                'Access Bank', 'First Bank', 'Guaranty Trust Bank', 'Zenith Bank',
+                'United Bank for Africa', 'Fidelity Bank', 'Stanbic IBTC Bank',
+                'First City Monument Bank', 'Union Bank', 'Wema Bank',
+                'Ecobank Nigeria', 'Sterling Bank', 'Jaiz Bank',
+            ]),
         ];
     }
 

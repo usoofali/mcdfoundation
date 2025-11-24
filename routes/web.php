@@ -50,6 +50,14 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/verify', 'contributions.verify')->name('verify');
         Volt::route('/{contribution}', 'contributions.show')->name('show');
         Volt::route('/{contribution}/edit', 'contributions.edit')->name('edit');
+
+        // Receipt Routes
+        Route::get('/{contribution}/receipt/download', [\App\Http\Controllers\ReceiptController::class, 'download'])
+            ->name('receipt.download');
+        Route::get('/{contribution}/receipt/view', [\App\Http\Controllers\ReceiptController::class, 'view'])
+            ->name('receipt.view');
+        Route::get('/{contribution}/receipt/print', [\App\Http\Controllers\ReceiptController::class, 'print'])
+            ->name('receipt.print');
     });
 
     // Loan Management Routes

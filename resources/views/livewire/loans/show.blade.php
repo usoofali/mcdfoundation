@@ -1,13 +1,16 @@
 <?php
 
 use App\Models\Loan;
-use App\Models\LoanRepayment;
 use App\Services\LoanService;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 
-new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class extends Component {
+new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class extends Component
+{
+    use WithPagination;
+
     public Loan $loan;
+
     public $activeTab = 'details';
 
     public function mount(Loan $loan): void
@@ -32,7 +35,7 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to approve loan: ' . $e->getMessage(),
+                'message' => 'Failed to approve loan: '.$e->getMessage(),
             ]);
         }
     }
@@ -49,14 +52,14 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to disburse loan: ' . $e->getMessage(),
+                'message' => 'Failed to disburse loan: '.$e->getMessage(),
             ]);
         }
     }
 
     public function getRepaymentsProperty()
     {
-        return $this->loan->repayments()->orderBy('payment_date', 'desc')->get();
+        return $this->loan->repayments()->orderBy('payment_date', 'desc')->paginate(15);
     }
 
     public function getApprovalsProperty()
@@ -284,6 +287,13 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Pagination -->
+                            @if($this->repayments->hasPages())
+                                <div class="border-t border-neutral-200 dark:border-neutral-700 px-6 py-4">
+                                    {{ $this->repayments->links() }}
+                                </div>
+                            @endif
                         @else
                             <div class="text-center py-8">
                                 <svg class="mx-auto h-12 w-12 text-neutral-400 dark:text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

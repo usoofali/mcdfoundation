@@ -340,6 +340,14 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                             <flux:button variant="ghost" size="sm" href="{{ route('contributions.show', $contribution) }}">
                                                 View
                                             </flux:button>
+                                            <flux:button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                icon="document-arrow-down"
+                                                href="{{ route('contributions.receipt.download', $contribution) }}"
+                                                title="Download Receipt"
+                                            >
+                                            </flux:button>
                                             @if($contribution->has_receipt)
                                                 <flux:button 
                                                     variant="outline" 
