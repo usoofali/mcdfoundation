@@ -105,5 +105,35 @@ class SystemSettingsSeeder extends Seeder
                 'description' => 'Loan configuration settings',
             ]
         );
+
+        // Program settings
+        Setting::firstOrCreate(
+            ['key' => 'program_settings'],
+            [
+                'value' => [
+                    'default_min_contributions' => 3,
+                    'default_min_age' => 16,
+                    'default_max_age' => 65,
+                    'default_capacity' => 30,
+                    'certificate_enabled' => true,
+                    'auto_enroll_enabled' => false,
+                ],
+                'description' => 'Vocational program configuration',
+            ]
+        );
+
+        // Cashout settings
+        Setting::firstOrCreate(
+            ['key' => 'cashout_settings'],
+            [
+                'value' => [
+                    'min_membership_months' => 12,
+                    'min_contributions_required' => 6,
+                    'allow_partial_cashout' => false,
+                    'cashout_processing_fee_percent' => 0,
+                ],
+                'description' => 'Member cashout configuration',
+            ]
+        );
     }
 }

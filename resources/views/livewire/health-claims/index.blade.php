@@ -4,12 +4,13 @@ use App\Models\HealthClaim;
 use App\Models\Member;
 use App\Models\HealthcareProvider;
 use App\Services\HealthClaimService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
 
 new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class extends Component {
-    use WithPagination;
+    use AuthorizesRequests, WithPagination;
 
     public $search = '';
     public $status = '';
@@ -22,7 +23,7 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
 
     public function mount(): void
     {
-        // Initialize any default values
+        $this->authorize('viewAny', HealthClaim::class);
     }
 
     public function updatedSearch(): void
@@ -144,11 +145,14 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
                     Manage member health claims and track reimbursements
                 </flux:text>
             </div>
-            <div>
-                <flux:button icon="plus" variant="primary" href="{{ route('health-claims.create') }}" class="gap-2">
-                    Submit Claim
-                </flux:button>
-            </div>
+            @can('create', HealthClaim::class)
+                <div>
+                    <flux:button variant="primary" icon="plus" variant="primary" href="{{ route('health-claims.create') }}"
+                        class="gap-2">
+                        Submit Claim
+                    </flux:button>
+                </div>
+            @endcan
         </div>
     </div>
 
@@ -321,7 +325,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                     <div>{{ $claim->member->full_name }}</div>
                                     <div class="text-xs text-neutral-500 dark:text-neutral-400">
-                                        {{ $claim->member->registration_no }}</div>
+                                        {{ $claim->member->registration_no }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
                                     {{ $claim->claim_type_label }}
@@ -339,12 +344,12 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                @if($claim->status === 'submitted') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                                @elseif($claim->status === 'approved') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                                @elseif($claim->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                @elseif($claim->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                @endif">
+                                                        @if($claim->status === 'submitted') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                                        @elseif($claim->status === 'approved') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                                        @elseif($claim->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                        @elseif($claim->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                                        @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                        @endif">
                                         {{ $claim->status_label }}
                                     </span>
                                 </td>
@@ -387,7 +392,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
                     Get started by submitting a health claim.
                 </flux:text>
                 <div class="mt-6">
-                    <flux:button icon="plus" variant="primary" href="{{ route('health-claims.create') }}" class="gap-2">
+                    <flux:button variant="primary" icon="plus" variant="primary" href="{{ route('health-claims.create') }}"
+                        class="gap-2">
                         Submit Claim
                     </flux:button>
                 </div>

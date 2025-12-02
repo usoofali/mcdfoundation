@@ -57,4 +57,36 @@ class SettingService
     {
         $this->set('fine_settings', $settings, 'Late payment fine settings');
     }
+
+    public function getProgramSettings(): array
+    {
+        return $this->get('program_settings', [
+            'default_min_contributions' => 3,
+            'default_min_age' => 16,
+            'default_max_age' => 65,
+            'default_capacity' => 30,
+            'certificate_enabled' => true,
+            'auto_enroll_enabled' => false,
+        ]);
+    }
+
+    public function updateProgramSettings(array $settings): void
+    {
+        $this->set('program_settings', $settings, 'Vocational program configuration');
+    }
+
+    public function getCashoutSettings(): array
+    {
+        return $this->get('cashout_settings', [
+            'min_membership_months' => 12,
+            'min_contributions_required' => 6,
+            'allow_partial_cashout' => false,
+            'cashout_processing_fee_percent' => 0,
+        ]);
+    }
+
+    public function updateCashoutSettings(array $settings): void
+    {
+        $this->set('cashout_settings', $settings, 'Member cashout configuration');
+    }
 }

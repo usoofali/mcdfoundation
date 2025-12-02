@@ -136,6 +136,25 @@ new #[Layout('components.layouts.app', ['title' => 'Members'])] class extends Co
         ]);
     }
 
+        public function rejectMember(Member $member): void
+    {
+        // Use update permission as proxy for reject authority
+        if (!auth()->user()->can('update', $member)) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'You do not have permission to reject members.',
+            ]);
+            return;
+        }
+
+        $member->update(['status' => 'inactive']);
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Member rejected successfully.',
+        ]);
+    }
+
     public function suspendMember(Member $member): void
     {
         if (!auth()->user()->can('update', $member)) {
@@ -204,7 +223,7 @@ new #[Layout('components.layouts.app', ['title' => 'Members'])] class extends Co
                         </flux:text>
                     </div>
                     <div>
-                        <flux:button icon="plus" variant="primary" href="{{ route('members.create') }}" wire:navigate class="gap-2">
+                        <flux:button variant="primary" icon="plus" variant="primary" href="{{ route('members.create') }}" wire:navigate class="gap-2">
                             
                             Add Member
                         </flux:button>
@@ -352,6 +371,9 @@ new #[Layout('components.layouts.app', ['title' => 'Members'])] class extends Co
                                             @if($member->status === 'pending')
                                                 <flux:button variant="primary" size="sm" wire:click="approveMember({{ $member->id }})">
                                                     Approve
+                                                </flux:button>
+                                                <flux:button variant="danger" size="sm" wire:click="rejectMember({{ $member->id }})">
+                                                    Reject
                                                 </flux:button>
                                             @endif
                                             

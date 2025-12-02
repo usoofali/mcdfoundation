@@ -29,7 +29,7 @@ class HealthClaimService
             // Validate eligibility before creating claim
             $eligibilityValidation = $this->eligibilityService->validateClaimEligibility($data);
 
-            if (! $eligibilityValidation['valid']) {
+            if (!$eligibilityValidation['valid']) {
                 throw new \Exception($eligibilityValidation['message']);
             }
 
@@ -53,6 +53,7 @@ class HealthClaimService
             $claim->update([
                 'status' => 'approved',
                 'approved_by' => auth()->id(),
+                'approval_date' => now()->toDateString(),
                 'remarks' => $remarks,
             ]);
 
@@ -72,7 +73,8 @@ class HealthClaimService
         return DB::transaction(function () use ($claim, $remarks) {
             $claim->update([
                 'status' => 'rejected',
-                'approved_by' => auth()->id(),
+                'rejected_by' => auth()->id(),
+                'rejection_date' => now()->toDateString(),
                 'remarks' => $remarks,
             ]);
 
@@ -99,15 +101,14 @@ class HealthClaimService
             ]);
 
             // Create fund ledger entry (outflow)
-            $this->fundLedgerService->recordOutflow([
-                'member_id' => $claim->member_id,
-                'source' => 'health_claim',
-                'amount' => $claim->covered_amount,
-                'description' => "Health claim payment - {$claim->claim_type_label} - Claim #{$claim->claim_number}",
-                'transaction_date' => now()->toDateString(),
-                'reference' => $claim->claim_number,
-                'created_by' => auth()->id(),
-            ]);
+            $this->fundLedgerService->recordOutflow(
+                'health_claim',
+                (float) $claim->covered_amount,
+                $claim->member_id,
+                "Health claim payment - {$claim->claim_type_label} - Claim #{$claim->claim_number}",
+                $claim->claim_number,
+                now()->toDateString()
+            );
 
             return true;
         });

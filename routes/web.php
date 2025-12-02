@@ -76,6 +76,21 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/{claim}/edit', 'health-claims.edit')->name('edit');
     });
 
+    // Program Management Routes
+    Route::prefix('programs')->name('programs.')->group(function () {
+        Volt::route('/', 'programs.index')->name('index');
+        Volt::route('/create', 'programs.create')->name('create');
+        Volt::route('/{program}', 'programs.show')->name('show');
+        Volt::route('/{program}/edit', 'programs.edit')->name('edit');
+    });
+
+    // Cashout Routes
+    Route::prefix('cashout')->name('cashout.')->group(function () {
+        Volt::route('/', 'cashout-request.index')->name('index');
+        Volt::route('/request', 'cashout-request.create')->name('create');
+        Volt::route('/{request}', 'cashout-request.show')->name('show');
+    });
+
     // Reports Routes
     Route::prefix('reports')->name('reports.')->group(function () {
         Volt::route('/', 'reports.index')->name('index');
@@ -106,6 +121,10 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('healthcare-providers/create', 'admin.healthcare-providers.create')->name('healthcare-providers.create');
         Volt::route('healthcare-providers/{provider}', 'admin.healthcare-providers.show')->name('healthcare-providers.show');
         Volt::route('healthcare-providers/{provider}/edit', 'admin.healthcare-providers.edit')->name('healthcare-providers.edit');
+
+        // Cashout Management
+        Volt::route('cashout', 'admin.cashout.index')->name('cashout.index');
+        Volt::route('cashout/{request}', 'admin.cashout.show')->name('cashout.show');
 
         // System Settings
         Volt::route('settings', 'admin.settings.index')->name('settings.index');

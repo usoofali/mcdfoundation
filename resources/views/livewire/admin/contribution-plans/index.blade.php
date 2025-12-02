@@ -53,7 +53,7 @@ new class extends Component
 <x-slot name="header">
     <div class="flex items-center justify-between">
         <h2 class="leading-tight text-xl font-semibold text-gray-900 dark:text-white">{{ __('Contribution Plans') }}</h2>
-        <flux:button icon="plus-circle" :href="route('admin.contribution-plans.create')" primary wire:navigate class="gap-2">
+        <flux:button variant="primary" icon="plus-circle" :href="route('admin.contribution-plans.create')" primary wire:navigate class="gap-2">
             
             {{ __('Create New Plan') }}
         </flux:button>

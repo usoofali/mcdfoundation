@@ -2,9 +2,11 @@
 
 use App\Models\HealthClaim;
 use App\Services\HealthClaimService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] class extends Component {
+    use AuthorizesRequests;
     public HealthClaim $claim;
     public $remarks = '';
     public $showApproveModal = false;
@@ -13,11 +15,14 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
 
     public function mount(HealthClaim $claim): void
     {
-        $this->claim = $claim->load(['member', 'healthcareProvider', 'approver', 'payer']);
+        $this->authorize('view', $claim);
+        $this->claim = $claim->load(['member', 'healthcareProvider', 'approver', 'rejecter', 'payer', 'documents', 'auditLogs']);
     }
 
     public function approveClaim(): void
     {
+        $this->authorize('approve', $this->claim);
+
         try {
             $claimService = app(HealthClaimService::class);
             $claimService->approveClaim($this->claim, $this->remarks);
@@ -31,6 +36,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
 
     public function rejectClaim(): void
     {
+        $this->authorize('reject', $this->claim);
+
         $this->validate([
             'remarks' => 'required|string|min:10',
         ]);
@@ -48,6 +55,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
 
     public function payClaim(): void
     {
+        $this->authorize('pay', $this->claim);
+
         try {
             $claimService = app(HealthClaimService::class);
             $claimService->payClaim($this->claim, $this->remarks);
@@ -61,6 +70,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
 
     public function deleteClaim(): void
     {
+        $this->authorize('delete', $this->claim);
+
         try {
             $claimService = app(HealthClaimService::class);
             $claimService->deleteClaim($this->claim);
@@ -100,9 +111,11 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                     Back to Claims
                 </flux:button>
                 @if($claim->status === 'submitted')
-                    <flux:button variant="outline" href="{{ route('health-claims.edit', $claim) }}" wire:navigate>
-                        Edit
-                    </flux:button>
+                    @can('update', $claim)
+                        <flux:button variant="outline" href="{{ route('health-claims.edit', $claim) }}" wire:navigate>
+                            Edit
+                        </flux:button>
+                    @endcan
                 @endif
             </div>
         </div>
@@ -126,7 +139,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                     <div>
                         <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">Registration No</flux:text>
                         <flux:text class="font-medium text-neutral-900 dark:text-white">
-                            {{ $claim->member->registration_no }}</flux:text>
+                            {{ $claim->member->registration_no }}
+                        </flux:text>
                     </div>
                     <div>
                         <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">Phone</flux:text>
@@ -157,17 +171,20 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                         <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">Healthcare Provider
                         </flux:text>
                         <flux:text class="font-medium text-neutral-900 dark:text-white">
-                            {{ $claim->healthcareProvider->name }}</flux:text>
+                            {{ $claim->healthcareProvider->name }}
+                        </flux:text>
                     </div>
                     <div>
                         <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">Claim Date</flux:text>
                         <flux:text class="font-medium text-neutral-900 dark:text-white">
-                            {{ $claim->claim_date->format('M d, Y') }}</flux:text>
+                            {{ $claim->claim_date->format('M d, Y') }}
+                        </flux:text>
                     </div>
                     <div>
                         <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">Submitted On</flux:text>
                         <flux:text class="font-medium text-neutral-900 dark:text-white">
-                            {{ $claim->created_at->format('M d, Y h:i A') }}</flux:text>
+                            {{ $claim->created_at->format('M d, Y h:i A') }}
+                        </flux:text>
                     </div>
                 </div>
             </div>
@@ -222,16 +239,22 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                         Actions
                     </flux:heading>
                     <div class="space-y-2">
-                        <flux:button variant="primary" class="w-full" wire:click="$set('showApproveModal', true)">
-                            Approve Claim
-                        </flux:button>
-                        <flux:button variant="danger" class="w-full" wire:click="$set('showRejectModal', true)">
-                            Reject Claim
-                        </flux:button>
-                        <flux:button variant="ghost" class="w-full" wire:click="deleteClaim"
-                            wire:confirm="Are you sure you want to delete this claim?">
-                            Delete Claim
-                        </flux:button>
+                        @can('approve', $claim)
+                            <flux:button variant="primary" class="w-full" wire:click="$set('showApproveModal', true)">
+                                Approve Claim
+                            </flux:button>
+                        @endcan
+                        @can('reject', $claim)
+                            <flux:button variant="danger" class="w-full" wire:click="$set('showRejectModal', true)">
+                                Reject Claim
+                            </flux:button>
+                        @endcan
+                        @can('delete', $claim)
+                            <flux:button variant="ghost" class="w-full" wire:click="deleteClaim"
+                                wire:confirm="Are you sure you want to delete this claim?">
+                                Delete Claim
+                            </flux:button>
+                        @endcan
                     </div>
                 </div>
             @elseif($claim->status === 'approved')
@@ -240,9 +263,11 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                     <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white">
                         Actions
                     </flux:heading>
-                    <flux:button variant="primary" class="w-full" wire:click="$set('showPayModal', true)">
-                        Process Payment
-                    </flux:button>
+                    @can('pay', $claim)
+                        <flux:button variant="primary" class="w-full" wire:click="$set('showPayModal', true)">
+                            Process Payment
+                        </flux:button>
+                    @endcan
                 </div>
             @endif
 
@@ -267,7 +292,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                         <div class="flex-1 pb-4">
                             <flux:text class="font-medium text-neutral-900 dark:text-white">Submitted</flux:text>
                             <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
-                                {{ $claim->created_at->format('M d, Y h:i A') }}</flux:text>
+                                {{ $claim->created_at->format('M d, Y h:i A') }}
+                            </flux:text>
                         </div>
                     </div>
 
@@ -276,9 +302,9 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                         <div class="flex gap-3">
                             <div class="flex flex-col items-center">
                                 <div class="flex h-8 w-8 items-center justify-center rounded-full 
-                                        @if($claim->status === 'rejected') bg-red-100 dark:bg-red-900/20
-                                        @else bg-green-100 dark:bg-green-900/20
-                                        @endif">
+                                                        @if($claim->status === 'rejected') bg-red-100 dark:bg-red-900/20
+                                                        @else bg-green-100 dark:bg-green-900/20
+                                                        @endif">
                                     <flux:icon name="@if($claim->status === 'rejected') x-mark @else check @endif"
                                         class="size-4 @if($claim->status === 'rejected') text-red-600 dark:text-red-400 @else text-green-600 dark:text-green-400 @endif" />
                                 </div>
@@ -288,10 +314,26 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                             </div>
                             <div class="flex-1 pb-4">
                                 <flux:text class="font-medium text-neutral-900 dark:text-white">
-                                    {{ $claim->status === 'rejected' ? 'Rejected' : 'Approved' }}</flux:text>
-                                @if($claim->approver)
-                                    <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">By
-                                        {{ $claim->approver->name }}</flux:text>
+                                    {{ $claim->status === 'rejected' ? 'Rejected' : 'Approved' }}
+                                </flux:text>
+                                @if($claim->status === 'rejected' && $claim->rejecter)
+                                    <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
+                                        By {{ $claim->rejecter->name }}
+                                    </flux:text>
+                                    @if($claim->rejection_date)
+                                        <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
+                                            {{ $claim->rejection_date->format('M d, Y') }}
+                                        </flux:text>
+                                    @endif
+                                @elseif($claim->approver)
+                                    <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
+                                        By {{ $claim->approver->name }}
+                                    </flux:text>
+                                    @if($claim->approval_date)
+                                        <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
+                                            {{ $claim->approval_date->format('M d, Y') }}
+                                        </flux:text>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -309,15 +351,74 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                             <div class="flex-1">
                                 <flux:text class="font-medium text-neutral-900 dark:text-white">Paid</flux:text>
                                 <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">
-                                    {{ $claim->paid_date ? $claim->paid_date->format('M d, Y') : 'N/A' }}</flux:text>
+                                    {{ $claim->paid_date ? $claim->paid_date->format('M d, Y') : 'N/A' }}
+                                </flux:text>
                                 @if($claim->payer)
                                     <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">By
-                                        {{ $claim->payer->name }}</flux:text>
+                                        {{ $claim->payer->name }}
+                                    </flux:text>
                                 @endif
                             </div>
                         </div>
                     @endif
                 </div>
+            </div>
+
+            <!-- Documents Section -->
+            <div
+                class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+                <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white">
+                    Documents ({{ $claim->documents->count() }})
+                </flux:heading>
+
+                @if($claim->documents->count() > 0)
+                    <div class="space-y-2">
+                        @foreach($claim->documents as $document)
+                            <div
+                                class="flex items-center justify-between p-2 rounded border border-neutral-200 dark:border-neutral-700">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <flux:icon name="document" class="size-4 text-neutral-500 flex-shrink-0" />
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">
+                                            {{ $document->file_name }}</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                            {{ $document->document_type_label }} • {{ $document->file_size_human }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="{{ Storage::url($document->file_path) }}" download="{{ $document->file_name }}"
+                                    class="text-blue-600 hover:text-blue-700 dark:text-blue-400 flex-shrink-0 ml-2">
+                                    <flux:icon name="arrow-down-tray" class="size-4" />
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">No documents uploaded</p>
+                @endif
+            </div>
+
+            <!-- Audit Trail Section -->
+            <div
+                class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+                <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white">
+                    Audit Trail
+                </flux:heading>
+
+                @if($claim->auditLogs && $claim->auditLogs->count() > 0)
+                    <div class="space-y-3">
+                        @foreach($claim->auditLogs->take(5) as $log)
+                            <div class="border-l-4 border-blue-500 pl-4 py-2">
+                                <p class="text-sm font-medium text-neutral-900 dark:text-white">{{ $log->action }}</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                    by {{ $log->user->name ?? 'System' }} on {{ $log->created_at->format('M d, Y h:i A') }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">No audit logs available</p>
+                @endif
             </div>
         </div>
     </div>
@@ -371,7 +472,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
             <div class="space-y-4">
                 <flux:heading size="lg">Process Payment</flux:heading>
                 <flux:text>Confirm payment of ₦{{ number_format($claim->covered_amount, 2) }} to
-                    {{ $claim->healthcareProvider->name }}.</flux:text>
+                    {{ $claim->healthcareProvider->name }}.
+                </flux:text>
 
                 <div>
                     <flux:label>Payment Notes (Optional)</flux:label>

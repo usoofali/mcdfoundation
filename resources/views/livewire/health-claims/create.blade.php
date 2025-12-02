@@ -1,25 +1,31 @@
 <?php
 
 use App\Models\HealthClaim;
+use App\Models\HealthClaimDocument;
 use App\Models\Member;
 use App\Models\HealthcareProvider;
 use App\Services\HealthClaimService;
 use App\Services\HealthEligibilityService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
 
 new #[Layout('components.layouts.app', ['title' => 'Submit Health Claim'])] class extends Component {
+    use AuthorizesRequests, WithFileUploads;
     public $member_id = '';
     public $healthcare_provider_id = '';
     public $claim_type = '';
     public $billed_amount = '';
     public $coverage_percent = 90.00;
     public $claim_date = '';
+    public $documents = [];
 
     public $eligibility = null;
     public $showEligibility = false;
 
     public function mount(): void
     {
+        $this->authorize('create', HealthClaim::class);
         $this->claim_date = now()->format('Y-m-d');
     }
 
@@ -88,6 +94,7 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Health Claim'])] clas
             'claim_type' => 'required|in:outpatient,inpatient,surgery,maternity',
             'billed_amount' => 'required|numeric|min:0',
             'claim_date' => 'required|date',
+            'documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         try {
@@ -102,6 +109,23 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Health Claim'])] clas
                 'claim_date' => $this->claim_date,
                 'status' => 'submitted',
             ]);
+
+            // Upload documents if any
+            if (!empty($this->documents)) {
+                foreach ($this->documents as $document) {
+                    $path = $document->store('health-claims/' . $claim->id, 'local');
+
+                    HealthClaimDocument::create([
+                        'health_claim_id' => $claim->id,
+                        'document_type' => 'other',
+                        'file_path' => $path,
+                        'file_name' => $document->getClientOriginalName(),
+                        'file_size' => $document->getSize(),
+                        'mime_type' => $document->getMimeType(),
+                        'uploaded_by' => auth()->id(),
+                    ]);
+                }
+            }
 
             session()->flash('success', 'Health claim submitted successfully.');
             $this->redirect(route('health-claims.show', $claim));
@@ -263,6 +287,26 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Health Claim'])] clas
                     <flux:label>Claim Date *</flux:label>
                     <flux:input wire:model="claim_date" type="date" required />
                     @error('claim_date') <flux:error>{{ $message }}</flux:error> @enderror
+                </div>
+
+                <!-- Document Upload -->
+                <div>
+                    <flux:label>Upload Documents (Optional)</flux:label>
+                    <flux:text class="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+                        Upload medical bills, receipts, or prescriptions (PDF, JPG, PNG - Max 5MB each)
+                    </flux:text>
+                    <input type="file" wire:model="documents" multiple accept=".pdf,.jpg,.jpeg,.png" class="block w-full text-sm text-neutral-900 dark:text-white
+                               file:mr-4 file:py-2 file:px-4
+                               file:rounded-md file:border-0
+                               file:text-sm file:font-semibold
+                               file:bg-blue-50 file:text-blue-700
+                               hover:file:bg-blue-100
+                               dark:file:bg-blue-900 dark:file:text-blue-200">
+                    @error('documents.*') <flux:error>{{ $message }}</flux:error> @enderror
+
+                    <div wire:loading wire:target="documents" class="mt-2 text-sm text-blue-600">
+                        Uploading...
+                    </div>
                 </div>
 
                 <!-- Submit Button -->

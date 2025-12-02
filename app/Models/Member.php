@@ -35,6 +35,8 @@ class Member extends Model
         'registration_date',
         'status',
         'eligibility_start_date',
+        'last_cashout_date',
+        'cashout_count',
         'created_by',
         'is_complete',
         'photo_path',
@@ -47,6 +49,7 @@ class Member extends Model
             'date_of_birth' => 'date',
             'registration_date' => 'date',
             'eligibility_start_date' => 'date',
+            'last_cashout_date' => 'datetime',
             'is_complete' => 'boolean',
         ];
     }
@@ -117,6 +120,11 @@ class Member extends Model
         return $this->hasMany(ProgramEnrollment::class);
     }
 
+    public function cashoutRequests(): HasMany
+    {
+        return $this->hasMany(CashoutRequest::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {
@@ -167,12 +175,12 @@ class Member extends Model
         $lastMember = static::orderBy('id', 'desc')->first();
         $nextNumber = $lastMember ? (int) substr($lastMember->registration_no, 5) + 1 : 1;
 
-        return 'MCDF/'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return 'MCDF/' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     public function calculateEligibilityStartDate(): ?Carbon
     {
-        if (! $this->is_complete || $this->status !== 'active') {
+        if (!$this->is_complete || $this->status !== 'active') {
             return null;
         }
 
@@ -294,6 +302,44 @@ class Member extends Model
             'inpatient' => $inpatientEligibility,
             'eligibility_start_date' => $this->calculateEligibilityStartDate(),
         ];
+    }
+
+    /**
+     * Get total contributions amount.
+     */
+    public function getTotalContributionsAttribute(): float
+    {
+        return (float) $this->contributions()
+            ->where('status', 'paid')
+            ->sum('amount');
+    }
+
+    /**
+     * Get total fines paid.
+     */
+    public function getTotalFinesPaidAttribute(): float
+    {
+        return (float) $this->contributions()
+            ->where('status', 'paid')
+            ->sum('fine_amount');
+    }
+
+    /**
+     * Get cashout eligible amount (contributions + fines).
+     */
+    public function getCashoutEligibleAmountAttribute(): float
+    {
+        return $this->total_contributions + $this->total_fines_paid;
+    }
+
+    /**
+     * Check if member has a pending cashout request.
+     */
+    public function getHasPendingCashoutAttribute(): bool
+    {
+        return $this->cashoutRequests()
+            ->whereIn('status', ['pending', 'verified', 'approved'])
+            ->exists();
     }
 
     public function terminate(): void

@@ -66,6 +66,32 @@
                 </flux:navlist.item>
             </flux:navlist.group>
 
+            <flux:navlist.group :heading="__('Programs')" class="grid">
+                <flux:navlist.item icon="academic-cap" :href="route('programs.index')"
+                    :current="request()->routeIs('programs.*')" wire:navigate>{{ __('All Programs') }}
+                </flux:navlist.item>
+
+                @if(auth()->user()->hasPermission('manage_programs'))
+                    <flux:navlist.item icon="plus" :href="route('programs.create')"
+                        :current="request()->routeIs('programs.create')" wire:navigate>{{ __('Create Program') }}
+                    </flux:navlist.item>
+                @endif
+            </flux:navlist.group>
+
+            <flux:navlist.group :heading="__('Cashout')" class="grid">
+                @if(auth()->user()->hasPermission('view_cashout'))
+                    {{-- Staff can see all cashouts --}}
+                    <flux:navlist.item icon="banknotes" :href="route('admin.cashout.index')"
+                        :current="request()->routeIs('admin.cashout.*')" wire:navigate>{{ __('All Cashouts') }}
+                    </flux:navlist.item>
+                @elseif(auth()->user()->hasPermission('request_cashout') && auth()->user()->member)
+                    {{-- Members see their own requests --}}
+                    <flux:navlist.item icon="banknotes" :href="route('cashout.index')"
+                        :current="request()->routeIs('cashout.*')" wire:navigate>{{ __('My Requests') }}
+                    </flux:navlist.item>
+                @endif
+            </flux:navlist.group>
+
             <flux:navlist.group :heading="__('Reports')" class="grid">
                 <flux:navlist.item icon="chart-bar" :href="route('reports.index')"
                     :current="request()->routeIs('reports.*')" wire:navigate>{{ __('All Reports') }}</flux:navlist.item>
@@ -81,10 +107,12 @@
                     </flux:navlist.item>
                     <flux:navlist.item icon="currency-dollar" :href="route('admin.contribution-plans.index')"
                         :current="request()->routeIs('admin.contribution-plans.*')" wire:navigate>
-                        {{ __('Contribution Plans') }}</flux:navlist.item>
+                        {{ __('Contribution Plans') }}
+                    </flux:navlist.item>
                     <flux:navlist.item icon="heart" :href="route('admin.healthcare-providers.index')"
                         :current="request()->routeIs('admin.healthcare-providers.*')" wire:navigate>
-                        {{ __('Healthcare Providers') }}</flux:navlist.item>
+                        {{ __('Healthcare Providers') }}
+                    </flux:navlist.item>
                     <flux:navlist.item icon="cog-6-tooth" :href="route('admin.settings.index')"
                         :current="request()->routeIs('admin.settings.*')" wire:navigate>{{ __('System Settings') }}
                     </flux:navlist.item>

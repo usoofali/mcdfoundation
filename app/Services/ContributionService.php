@@ -37,8 +37,8 @@ class ContributionService
     public function updateContribution(Contribution $contribution, array $data): bool
     {
         return DB::transaction(function () use ($contribution, $data) {
-            $oldAmount = $contribution->amount;
-            $oldFineAmount = $contribution->fine_amount;
+            $oldAmount = (float) $contribution->amount;
+            $oldFineAmount = (float) $contribution->fine_amount;
 
             $updated = $contribution->update($data);
 
@@ -75,35 +75,35 @@ class ContributionService
         $query = Contribution::with(['member', 'contributionPlan', 'collector']);
 
         // Apply filters
-        if (! empty($filters['member_id'])) {
+        if (!empty($filters['member_id'])) {
             $query->where('member_id', $filters['member_id']);
         }
 
-        if (! empty($filters['status'])) {
+        if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (! empty($filters['payment_method'])) {
+        if (!empty($filters['payment_method'])) {
             $query->where('payment_method', $filters['payment_method']);
         }
 
-        if (! empty($filters['date_from'])) {
+        if (!empty($filters['date_from'])) {
             $query->where('payment_date', '>=', $filters['date_from']);
         }
 
-        if (! empty($filters['date_to'])) {
+        if (!empty($filters['date_to'])) {
             $query->where('payment_date', '<=', $filters['date_to']);
         }
 
-        if (! empty($filters['period_from'])) {
+        if (!empty($filters['period_from'])) {
             $query->where('period_start', '>=', $filters['period_from']);
         }
 
-        if (! empty($filters['period_to'])) {
+        if (!empty($filters['period_to'])) {
             $query->where('period_end', '<=', $filters['period_to']);
         }
 
-        if (! empty($filters['search'])) {
+        if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('receipt_number', 'like', "%{$search}%")
@@ -148,15 +148,15 @@ class ContributionService
         $query = Contribution::query();
 
         // Apply same filters as getContributions
-        if (! empty($filters['member_id'])) {
+        if (!empty($filters['member_id'])) {
             $query->where('member_id', $filters['member_id']);
         }
 
-        if (! empty($filters['date_from'])) {
+        if (!empty($filters['date_from'])) {
             $query->where('payment_date', '>=', $filters['date_from']);
         }
 
-        if (! empty($filters['date_to'])) {
+        if (!empty($filters['date_to'])) {
             $query->where('payment_date', '<=', $filters['date_to']);
         }
 
@@ -180,15 +180,19 @@ class ContributionService
     }
 
     /**
-     * Mark contributions as overdue.
+     * Mark contributions as overdue and apply fines based on system settings.
      */
     public function markOverdueContributions(): int
     {
+        $settingService = app(SettingService::class);
+        $fineSettings = $settingService->getFineSettings();
+        $finePercent = $fineSettings['late_payment_fine_percent'] ?? 50;
+
         $overdueCount = Contribution::where('status', 'pending')
             ->where('period_end', '<', now())
             ->update([
                 'status' => 'overdue',
-                'fine_amount' => DB::raw('amount * 0.5'), // 50% fine
+                'fine_amount' => DB::raw("amount * ({$finePercent} / 100)"),
             ]);
 
         return $overdueCount;
@@ -260,7 +264,7 @@ class ContributionService
             throw new \Exception('Only pending contributions can be verified');
         }
 
-        if (! $contribution->is_member_submitted) {
+        if (!$contribution->is_member_submitted) {
             throw new \Exception('Only member-submitted contributions can be verified');
         }
 
@@ -349,7 +353,7 @@ class ContributionService
             throw new \Exception('Only pending contributions can be deleted');
         }
 
-        if (! $contribution->is_member_submitted) {
+        if (!$contribution->is_member_submitted) {
             throw new \Exception('Only member-submitted contributions can be deleted');
         }
 

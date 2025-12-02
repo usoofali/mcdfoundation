@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ContributionPlansSeeder::class,
             HealthcareProvidersSeeder::class,
             DefaultAdminSeeder::class,
+            ProgramSeeder::class,
         ]);
     }
 }

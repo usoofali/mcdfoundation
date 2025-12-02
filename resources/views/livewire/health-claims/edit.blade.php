@@ -5,9 +5,11 @@ use App\Models\Member;
 use App\Models\HealthcareProvider;
 use App\Services\HealthClaimService;
 use App\Services\HealthEligibilityService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app', ['title' => 'Edit Health Claim'])] class extends Component {
+    use AuthorizesRequests;
     public HealthClaim $claim;
     public $member_id = '';
     public $healthcare_provider_id = '';
@@ -21,6 +23,8 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Health Claim'])] class 
 
     public function mount(HealthClaim $claim): void
     {
+        $this->authorize('update', $claim);
+
         if ($claim->status !== 'submitted') {
             session()->flash('error', 'Only submitted claims can be edited.');
             $this->redirect(route('health-claims.show', $claim));
@@ -96,6 +100,8 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Health Claim'])] class 
 
     public function update(): void
     {
+        $this->authorize('update', $this->claim);
+
         $this->validate([
             'member_id' => 'required|exists:members,id',
             'healthcare_provider_id' => 'required|exists:healthcare_providers,id',

@@ -6,6 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class HealthClaim extends Model
@@ -23,6 +24,9 @@ class HealthClaim extends Model
         'claim_date',
         'status',
         'approved_by',
+        'approval_date',
+        'rejected_by',
+        'rejection_date',
         'paid_by',
         'paid_date',
         'remarks',
@@ -35,6 +39,8 @@ class HealthClaim extends Model
         'covered_amount' => 'decimal:2',
         'copay_amount' => 'decimal:2',
         'claim_date' => 'date',
+        'approval_date' => 'date',
+        'rejection_date' => 'date',
         'paid_date' => 'date',
     ];
 
@@ -68,6 +74,30 @@ class HealthClaim extends Model
     public function payer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_by');
+    }
+
+    /**
+     * Get the user who rejected the claim.
+     */
+    public function rejecter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /**
+     * Get the documents for the claim.
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(HealthClaimDocument::class);
+    }
+
+    /**
+     * Get the audit logs for the claim.
+     */
+    public function auditLogs()
+    {
+        return $this->morphMany(\App\Models\AuditLog::class, 'auditable')->orderBy('created_at', 'desc');
     }
 
     /**
@@ -194,7 +224,7 @@ class HealthClaim extends Model
 
         $sequence = $lastClaim ? (int) substr($lastClaim->claim_number, -4) + 1 : 1;
 
-        return 'CLM'.$year.$month.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return 'CLM' . $year . $month . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**

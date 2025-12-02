@@ -50,7 +50,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
     public function mount(Member $member): void
     {
         $this->member = $member;
-        
+
         // Check authorization
         if (!auth()->user()->can('update', $member)) {
             abort(403, 'You do not have permission to edit this member.');
@@ -203,6 +203,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                 'contribution_plan_id' => $this->contribution_plan_id,
                 'notes' => $this->notes,
                 'is_complete' => true,
+                'status' => 'pending',
             ];
 
             // Handle photo upload
@@ -326,7 +327,8 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Member</h1>
-                <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Update member information - {{ $member->registration_no }}</p>
+                <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Update member information -
+                    {{ $member->registration_no }}</p>
             </div>
             <div class="mt-4 sm:mt-0 flex space-x-3">
                 @if($member->status === 'pending' && auth()->user()->can('approve', $member))
@@ -334,19 +336,19 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                         Approve Member
                     </flux:button>
                 @endif
-                
+
                 @if($member->status === 'active' && auth()->user()->can('update', $member))
                     <flux:button variant="outline" wire:click="suspend">
                         Suspend Member
                     </flux:button>
                 @endif
-                
+
                 @if($member->status === 'suspended' && auth()->user()->can('update', $member))
                     <flux:button variant="primary" wire:click="activate">
                         Activate Member
                     </flux:button>
                 @endif
-                
+
                 <flux:button variant="outline" href="{{ route('members.show', $member) }}" wire:navigate>
                     View Member
                 </flux:button>
@@ -359,11 +361,12 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white">Registration Progress</h3>
                 <span class="text-sm text-neutral-500 dark:text-neutral-400">Step {{ $currentStep }} of 3</span>
             </div>
-            
+
             <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
-                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: {{ $this->progress }}%"></div>
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style="width: {{ $this->progress }}%"></div>
             </div>
-            
+
             <div class="flex justify-between mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                 @foreach($this->steps as $step => $title)
                     <span class="{{ $currentStep >= $step ? 'text-blue-600 dark:text-blue-400 font-medium' : '' }}">
@@ -380,15 +383,16 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                 @if($currentStep === 1)
                     <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
-                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Basic personal details of the member</p>
+                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Basic personal details of the member
+                        </p>
                     </div>
-                    
+
                     <div class="px-6 py-4 space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <flux:input wire:model="full_name" label="First Name" required />
                             <flux:input wire:model="family_name" label="Family Name" required />
                         </div>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <flux:input wire:model="date_of_birth" type="date" label="Date of Birth" required />
                             <flux:select wire:model="marital_status" label="Marital Status" required>
@@ -399,7 +403,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                                 <option value="widowed">Widowed</option>
                             </flux:select>
                         </div>
-                        
+
                         <flux:input wire:model="nin" label="National Identification Number (NIN)" placeholder="Optional" />
                     </div>
                 @endif
@@ -408,14 +412,15 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                 @if($currentStep === 2)
                     <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Address & Location</h3>
-                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Residential and location information</p>
+                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Residential and location information
+                        </p>
                     </div>
-                    
+
                     <div class="px-6 py-4 space-y-6">
                         <flux:input wire:model="occupation" label="Occupation" required />
                         <flux:input wire:model="workplace" label="Workplace" placeholder="Optional" />
                         <flux:textarea wire:model="address" label="Address" required rows="3" />
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <flux:input wire:model="hometown" label="Hometown" required />
                             <flux:select wire:model="country" label="Country" required>
@@ -423,7 +428,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                                 <option value="Other">Other</option>
                             </flux:select>
                         </div>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <flux:select wire:model="state_id" label="State" required>
                                 <option value="">Select State</option>
@@ -431,7 +436,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                                     <option value="{{ $state->id }}">{{ $state->name }}</option>
                                 @endforeach
                             </flux:select>
-                            
+
                             <flux:select wire:model="lga_id" label="Local Government Area" required>
                                 <option value="">Select LGA</option>
                                 @foreach($lgas as $lga)
@@ -446,9 +451,10 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                 @if($currentStep === 3)
                     <div class="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Health & Contact Information</h3>
-                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Health provider and contact details</p>
+                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Health provider and contact details
+                        </p>
                     </div>
-                    
+
                     <div class="px-6 py-4 space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <flux:select wire:model="healthcare_provider_id" label="Healthcare Provider">
@@ -457,33 +463,36 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                                     <option value="{{ $provider->id }}">{{ $provider->name }}</option>
                                 @endforeach
                             </flux:select>
-                            
+
                             <flux:select wire:model="contribution_plan_id" label="Contribution Plan" required>
                                 <option value="">Select Plan</option>
                                 @foreach($contributionPlans as $plan)
-                                    <option value="{{ $plan->id }}">{{ $plan->label }} - ₦{{ number_format($plan->amount) }}</option>
+                                    <option value="{{ $plan->id }}">{{ $plan->label }} - ₦{{ number_format($plan->amount) }}
+                                    </option>
                                 @endforeach
                             </flux:select>
                         </div>
-                        
+
                         <flux:input wire:model="health_status" label="Health Status" placeholder="Optional" />
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <flux:input wire:model="phone" label="Phone Number" placeholder="Optional" />
                             <flux:input wire:model="email" type="email" label="Email Address" placeholder="Optional" />
                         </div>
-                        
+
                         <div>
                             <flux:input wire:model="photo" type="file" label="Profile Photo" accept="image/*" />
                             @if($member->photo_path)
                                 <div class="mt-2">
-                                    <img src="{{ Storage::url($member->photo_path) }}" alt="Current Photo" class="h-20 w-20 rounded-lg object-cover">
+                                    <img src="{{ Storage::url($member->photo_path) }}" alt="Current Photo"
+                                        class="h-20 w-20 rounded-lg object-cover">
                                     <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Current photo</p>
                                 </div>
                             @endif
                         </div>
-                        
-                        <flux:textarea wire:model="notes" label="Notes" placeholder="Additional notes about the member" rows="3" />
+
+                        <flux:textarea wire:model="notes" label="Notes" placeholder="Additional notes about the member"
+                            rows="3" />
                     </div>
                 @endif
 
@@ -496,7 +505,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                             </flux:button>
                         @endif
                     </div>
-                    
+
                     <div class="flex space-x-3">
                         @if($currentStep < 3)
                             <flux:button type="button" wire:click="nextStep">

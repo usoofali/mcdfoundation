@@ -218,11 +218,11 @@ class Contribution extends Model
      */
     public function getReceiptUrlAttribute(): ?string
     {
-        if (! $this->receipt_path) {
+        if (!$this->receipt_path) {
             return null;
         }
 
-        return asset('storage/'.$this->receipt_path);
+        return asset('storage/' . $this->receipt_path);
     }
 
     /**
@@ -230,7 +230,7 @@ class Contribution extends Model
      */
     public function getHasReceiptAttribute(): bool
     {
-        return ! empty($this->receipt_path);
+        return !empty($this->receipt_path);
     }
 
     /**
@@ -238,16 +238,20 @@ class Contribution extends Model
      */
     public function getIsMemberSubmittedAttribute(): bool
     {
-        return ! empty($this->uploaded_by) && empty($this->collected_by);
+        return !empty($this->uploaded_by) && empty($this->collected_by);
     }
 
     /**
-     * Calculate late fine (50% of amount if overdue).
+     * Calculate late fine based on system settings.
      */
     public function calculateLateFine(): float
     {
         if ($this->is_late && $this->status !== 'paid') {
-            return $this->amount * 0.5; // 50% fine
+            $settingService = app(\App\Services\SettingService::class);
+            $fineSettings = $settingService->getFineSettings();
+            $finePercent = $fineSettings['late_payment_fine_percent'] ?? 50;
+
+            return $this->amount * ($finePercent / 100);
         }
 
         return 0;
@@ -274,7 +278,7 @@ class Contribution extends Model
             $newNumber = 1;
         }
 
-        return $prefix.$year.$month.str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix . $year . $month . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
