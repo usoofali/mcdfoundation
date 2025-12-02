@@ -125,7 +125,10 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Health Claim'])] class 
             session()->flash('success', 'Health claim updated successfully.');
             $this->redirect(route('health-claims.show', $this->claim));
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }; ?>

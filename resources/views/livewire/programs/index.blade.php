@@ -35,13 +35,18 @@ new #[Layout('components.layouts.app', ['title' => 'Programs'])] class extends C
         try {
             $programService = app(ProgramService::class);
             $programService->deleteProgram($program);
-
-            session()->flash('success', 'Program deleted successfully.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Program deleted successfully.',
+            ]);
 
             // Reset pagination if needed
             $this->resetPage();
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -153,9 +158,9 @@ new #[Layout('components.layouts.app', ['title' => 'Programs'])] class extends C
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                                                @if($program->is_active) bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                                                @endif">
+                                                                                                        @if($program->is_active) bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                                                        @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                                                        @endif">
                                         {{ $program->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>

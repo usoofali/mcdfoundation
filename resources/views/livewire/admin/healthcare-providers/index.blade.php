@@ -20,7 +20,10 @@ new #[Layout('components.layouts.app', ['title' => 'Healthcare Providers'])] cla
 
         // Check if provider has any associated members or claims
         if ($provider->healthClaims()->count() > 0) {
-            session()->flash('error', 'Cannot delete provider with existing health claims.');
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Cannot delete provider with existing health claims.',
+            ]);
             $this->dispatch('close-modal', 'confirm-delete-provider-' . $providerId);
             return;
         }
@@ -30,8 +33,10 @@ new #[Layout('components.layouts.app', ['title' => 'Healthcare Providers'])] cla
         // Close the modal
         $this->dispatch('close-modal', 'confirm-delete-provider-' . $providerId);
 
-        session()->flash('success', 'Healthcare provider deleted successfully.');
-
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Healthcare provider deleted successfully.',
+        ]);
         // Reset pagination if needed
         $this->resetPage();
     }
@@ -125,7 +130,7 @@ new #[Layout('components.layouts.app', ['title' => 'Healthcare Providers'])] cla
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                                                            {{ $provider->status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }}">
+                                                                                                            {{ $provider->status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }}">
                                             {{ ucfirst($provider->status) }}
                                         </span>
                                     </td>

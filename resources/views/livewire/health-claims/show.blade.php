@@ -30,7 +30,10 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
             session()->flash('success', 'Claim approved successfully.');
             $this->redirect(route('health-claims.show', $this->claim), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -49,7 +52,10 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
             session()->flash('success', 'Claim rejected.');
             $this->redirect(route('health-claims.show', $this->claim), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -64,7 +70,10 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
             session()->flash('success', 'Claim payment processed successfully.');
             $this->redirect(route('health-claims.show', $this->claim), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -79,7 +88,10 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
             session()->flash('success', 'Claim deleted successfully.');
             $this->redirect(route('health-claims.index'), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }; ?>

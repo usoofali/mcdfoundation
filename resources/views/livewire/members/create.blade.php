@@ -204,9 +204,15 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
         });
 
         if ($this->isPreRegistration) {
-            session()->flash('success', 'Member pre-registered successfully with user account. Complete registration later.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Member pre-registered successfully with user account. Complete registration later.',
+            ]);
         } else {
-            session()->flash('success', 'Member registered successfully with user account. Awaiting approval.');
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => 'Member registered successfully with user account. Awaiting approval.',
+            ]);
         }
 
         $this->redirect(route('members.show', $member));

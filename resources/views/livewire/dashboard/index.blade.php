@@ -105,8 +105,7 @@ new class extends Component
                             wire:loading.attr="disabled"
                             wire:target="refreshDashboard"
                             class="gap-2"
-                            aria-label="Refresh dashboard data"
-                        >
+                            aria-label="Refresh dashboard data">
                             <flux:icon 
                                 name="arrow-path" 
                                 class="size-4"

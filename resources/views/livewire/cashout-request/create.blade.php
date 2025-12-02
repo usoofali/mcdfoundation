@@ -34,7 +34,10 @@ new #[Layout('components.layouts.app', ['title' => 'Request Cashout'])] class ex
         $member = auth()->user()->member;
 
         if (!$this->eligibility['eligible']) {
-            session()->flash('error', 'You are not eligible for cashout.');
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'You are not eligible for cashout.',
+            ]);
             return;
         }
 
@@ -51,7 +54,10 @@ new #[Layout('components.layouts.app', ['title' => 'Request Cashout'])] class ex
             session()->flash('success', 'Cashout request submitted successfully.');
             $this->redirect(route('cashout.show', $request), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }; ?>

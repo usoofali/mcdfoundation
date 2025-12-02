@@ -32,7 +32,10 @@ new #[Layout('components.layouts.app', ['title' => 'Process Cashout Request'])] 
             session()->flash('success', 'Cashout request verified successfully.');
             $this->redirect(route('admin.cashout.index'), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -51,7 +54,10 @@ new #[Layout('components.layouts.app', ['title' => 'Process Cashout Request'])] 
             session()->flash('success', 'Cashout request approved successfully.');
             $this->redirect(route('admin.cashout.index'), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -70,7 +76,10 @@ new #[Layout('components.layouts.app', ['title' => 'Process Cashout Request'])] 
             session()->flash('success', 'Cashout disbursed successfully.');
             $this->redirect(route('admin.cashout.index'), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -89,7 +98,10 @@ new #[Layout('components.layouts.app', ['title' => 'Process Cashout Request'])] 
             session()->flash('success', 'Cashout request rejected.');
             $this->redirect(route('admin.cashout.index'), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }; ?>
