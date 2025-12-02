@@ -27,14 +27,19 @@ new #[Layout('components.layouts.app', ['title' => 'Programs'])] class extends C
         $this->resetPage();
     }
 
-    public function delete(Program $program): void
+    public function delete($programId): void
     {
+        $program = Program::findOrFail($programId);
         $this->authorize('delete', $program);
 
         try {
             $programService = app(ProgramService::class);
             $programService->deleteProgram($program);
+
             session()->flash('success', 'Program deleted successfully.');
+
+            // Reset pagination if needed
+            $this->resetPage();
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
@@ -130,7 +135,8 @@ new #[Layout('components.layouts.app', ['title' => 'Programs'])] class extends C
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="font-medium text-gray-900 dark:text-white">{{ $program->name }}</div>
                                     <div class="text-xs text-neutral-500 dark:text-neutral-400">
-                                        {{ Str::limit($program->description, 60) }}</div>
+                                        {{ Str::limit($program->description, 60) }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
                                     <div>{{ $program->start_date?->format('M d, Y') ?? 'TBD' }}</div>
@@ -147,29 +153,29 @@ new #[Layout('components.layouts.app', ['title' => 'Programs'])] class extends C
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                @if($program->is_active) bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                @endif">
+                                                                                @if($program->is_active) bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                                @endif">
                                         {{ $program->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <flux:button variant="ghost" size="sm" href="{{ route('programs.show', $program) }}"
-                                            wire:navigate>
+                                        <flux:button size="sm" href="{{ route('programs.show', $program) }}" wire:navigate>
                                             View
                                         </flux:button>
                                         @can('update', $program)
-                                            <flux:button variant="ghost" size="sm" href="{{ route('programs.edit', $program) }}"
-                                                wire:navigate>
+                                            <flux:button size="sm" href="{{ route('programs.edit', $program) }}" wire:navigate>
                                                 Edit
                                             </flux:button>
                                         @endcan
                                         @can('delete', $program)
-                                            <flux:button variant="ghost" size="sm" wire:click="delete({{ $program->id }})"
-                                                wire:confirm="Are you sure you want to delete this program?">
-                                                Delete
-                                            </flux:button>
+                                            <flux:modal.trigger name="confirm-delete-program-{{ $program->id }}">
+                                                <flux:button variant="danger" size="sm"
+                                                    wire:click="$dispatch('open-modal', 'confirm-delete-program-{{ $program->id }}')">
+                                                    Delete
+                                                </flux:button>
+                                            </flux:modal.trigger>
                                         @endcan
                                     </div>
                                 </td>
@@ -207,4 +213,32 @@ new #[Layout('components.layouts.app', ['title' => 'Programs'])] class extends C
             </div>
         @endif
     </div>
+
+    <!-- Delete Confirmation Modals -->
+    @foreach($this->programs as $program)
+        @can('delete', $program)
+            <flux:modal name="confirm-delete-program-{{ $program->id }}" focusable class="max-w-lg">
+                <div class="space-y-6">
+                    <div>
+                        <flux:heading size="lg">{{ __('Confirm Deletion') }}</flux:heading>
+                        <flux:subheading>
+                            {{ __('Are you sure you want to delete :name? This action cannot be undone.', ['name' => $program->title]) }}
+                        </flux:subheading>
+                    </div>
+
+                    <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                        <flux:modal.close>
+                            <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
+                        </flux:modal.close>
+
+                        <flux:modal.close>
+                            <flux:button variant="danger" wire:click="delete({{ $program->id }})">
+                                {{ __('Delete') }}
+                            </flux:button>
+                        </flux:modal.close>
+                    </div>
+                </div>
+            </flux:modal>
+        @endcan
+    @endforeach
 </div>
