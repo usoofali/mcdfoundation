@@ -75,6 +75,10 @@
                     <flux:navlist.item icon="plus" :href="route('programs.create')"
                         :current="request()->routeIs('programs.create')" wire:navigate>{{ __('Create Program') }}
                     </flux:navlist.item>
+
+                    <flux:navlist.item icon="users" :href="route('program-enrollments.index')"
+                        :current="request()->routeIs('program-enrollments.*')" wire:navigate>{{ __('Manage Enrollments') }}
+                    </flux:navlist.item>
                 @endif
             </flux:navlist.group>
 
@@ -112,6 +116,14 @@
                     <flux:navlist.item icon="heart" :href="route('admin.healthcare-providers.index')"
                         :current="request()->routeIs('admin.healthcare-providers.*')" wire:navigate>
                         {{ __('Healthcare Providers') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="map" :href="route('admin.states.index')"
+                        :current="request()->routeIs('admin.states.*')" wire:navigate>
+                        {{ __('States') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="map-pin" :href="route('admin.lgas.index')"
+                        :current="request()->routeIs('admin.lgas.*')" wire:navigate>
+                        {{ __('LGAs') }}
                     </flux:navlist.item>
                     <flux:navlist.item icon="cog-6-tooth" :href="route('admin.settings.index')"
                         :current="request()->routeIs('admin.settings.*')" wire:navigate>{{ __('System Settings') }}

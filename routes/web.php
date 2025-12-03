@@ -84,6 +84,11 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/{program}/edit', 'programs.edit')->name('edit');
     });
 
+    // Program Enrollments Routes
+    Route::prefix('program-enrollments')->name('program-enrollments.')->group(function () {
+        Volt::route('/', 'program-enrollments.index')->name('index');
+    });
+
     // Cashout Routes
     Route::prefix('cashout')->name('cashout.')->group(function () {
         Volt::route('/', 'cashout-request.index')->name('index');
@@ -121,6 +126,10 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('healthcare-providers/create', 'admin.healthcare-providers.create')->name('healthcare-providers.create');
         Volt::route('healthcare-providers/{provider}', 'admin.healthcare-providers.show')->name('healthcare-providers.show');
         Volt::route('healthcare-providers/{provider}/edit', 'admin.healthcare-providers.edit')->name('healthcare-providers.edit');
+
+        // States and LGAs Management
+        Volt::route('states', 'admin.states.index')->name('states.index');
+        Volt::route('lgas', 'admin.lgas.index')->name('lgas.index');
 
         // Cashout Management
         Volt::route('cashout', 'admin.cashout.index')->name('cashout.index');
