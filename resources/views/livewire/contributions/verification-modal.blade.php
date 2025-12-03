@@ -35,11 +35,11 @@ new class extends Component {
         try {
             $contributionService->verifyContribution($this->contribution, true, $this->verificationNotes);
 
-            $this->dispatch('alert', type: 'success', message: 'Contribution approved successfully!');
+            $this->dispatch('notify', type: 'success', message: 'Contribution approved successfully!');
             $this->dispatch('contributionVerified');
             $this->closeModal();
         } catch (\Exception $e) {
-            $this->dispatch('alert', type: 'error', message: 'Failed to approve contribution: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to approve contribution: ' . $e->getMessage());
         } finally {
             $this->isApproving = false;
         }
@@ -50,11 +50,11 @@ new class extends Component {
         try {
             $contributionService->verifyContribution($this->contribution, false, $this->verificationNotes);
 
-            $this->dispatch('alert', type: 'info', message: 'Contribution rejected.');
+            $this->dispatch('notify', type: 'info', message: 'Contribution rejected.');
             $this->dispatch('contributionVerified');
             $this->closeModal();
         } catch (\Exception $e) {
-            $this->dispatch('alert', type: 'error', message: 'Failed to reject contribution: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to reject contribution: ' . $e->getMessage());
         }
     }
 

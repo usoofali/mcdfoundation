@@ -26,8 +26,6 @@ new class extends Component {
 
     public function deleteRole(Role $role): void
     {
-        Gate::authorize('delete', $role);
-
         // Check if role has users
         if ($role->users()->count() > 0) {
             $this->dispatch('notify', [
@@ -37,6 +35,7 @@ new class extends Component {
 
             return;
         }
+        Gate::authorize('delete', $role);
 
         $role->delete();
 
@@ -211,9 +210,11 @@ new class extends Component {
                             <flux:button variant="outline">{{ __('Cancel') }}</flux:button>
                         </flux:modal.close>
 
-                        <flux:button variant="danger" wire:click="deleteRole({{ $role->id }})">
-                            {{ __('Delete') }}
-                        </flux:button>
+                        <flux:modal.close>
+                            <flux:button variant="danger" wire:click="deleteRole({{ $role->id }})">
+                                {{ __('Delete') }}
+                            </flux:button>
+                        </flux:modal.close>
                     </div>
                 </div>
             </flux:modal>

@@ -3,7 +3,7 @@
 use App\Models\Setting;
 use Livewire\Volt\Component;
 
-new class extends Component {
+new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class extends Component {
     public array $settings = [];
     public array $formData = [];
 
@@ -60,7 +60,7 @@ new class extends Component {
     public function resetToDefaults(): void
     {
         $this->dispatch('notify', [
-            'type' => 'warning',
+            'type' => 'info',
             'message' => 'This feature will be implemented in the next version.',
         ]);
     }
@@ -265,13 +265,12 @@ new class extends Component {
 
                 <!-- Actions -->
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <flux:button wire:click="resetToDefaults" variant="outline" class="w-full gap-2 sm:w-auto">
-                        <flux:icon name="arrow-path" class="size-4" />
+                    <flux:button icon="arrow-path" wire:click="resetToDefaults" variant="outline"
+                        class="w-full gap-2 sm:w-auto">
                         {{ __('Reset to Defaults') }}
                     </flux:button>
 
-                    <flux:button type="submit" primary class="w-full gap-2 sm:w-auto">
-                        <flux:icon name="check" class="size-4" />
+                    <flux:button icon="check" type="submit" primary class="w-full gap-2 sm:w-auto">
                         {{ __('Save Settings') }}
                     </flux:button>
                 </div>

@@ -74,8 +74,15 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
     public function updatedFormMemberId($value): void
     {
         if ($value) {
-            $this->selectedMember = Member::find($value);
+            $this->selectedMember = Member::with('contributionPlan')->find($value);
             $this->showMemberSearch = false;
+            
+            // Automatically set the member's contribution plan
+            if ($this->selectedMember && $this->selectedMember->contributionPlan) {
+                $this->form['contribution_plan_id'] = $this->selectedMember->contribution_plan_id;
+                $this->selectedPlan = $this->selectedMember->contributionPlan;
+                $this->form['amount'] = $this->selectedPlan->amount;
+            }
         }
     }
 
@@ -95,9 +102,16 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
     public function selectMember($memberId): void
     {
         $this->form['member_id'] = $memberId;
-        $this->selectedMember = Member::find($memberId);
+        $this->selectedMember = Member::with('contributionPlan')->find($memberId);
         $this->memberSearch = '';
         $this->showMemberSearch = false;
+        
+        // Automatically set the member's contribution plan
+        if ($this->selectedMember && $this->selectedMember->contributionPlan) {
+            $this->form['contribution_plan_id'] = $this->selectedMember->contribution_plan_id;
+            $this->selectedPlan = $this->selectedMember->contributionPlan;
+            $this->form['amount'] = $this->selectedPlan->amount;
+        }
     }
 
     public function getMembersProperty()
@@ -187,22 +201,36 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
                     @enderror
                 </div>
 
-                <!-- Contribution Plan -->
+                <!-- Contribution Plan (Auto-populated from Member) -->
                 <div>
-                    <flux:input 
-                        wire:model.live="form.contribution_plan_id" 
-                        label="Contribution Plan"
-                        placeholder="Select contribution plan"
-                        required
-                    />
-                    
                     @if($selectedPlan)
-                        <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div class="font-medium text-blue-800">{{ $selectedPlan->label }} Plan</div>
-                            <div class="text-sm text-blue-600">Amount: ₦{{ number_format($selectedPlan->amount, 2) }}</div>
-                            @if($selectedPlan->description)
-                                <div class="text-sm text-blue-600 mt-1">{{ $selectedPlan->description }}</div>
-                            @endif
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Contribution Plan
+                            </label>
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-medium text-blue-900 dark:text-blue-100">{{ $selectedPlan->label }} Plan</div>
+                                        <div class="text-sm text-blue-700 dark:text-blue-300">Amount: ₦{{ number_format($selectedPlan->amount, 2) }}</div>
+                                        @if($selectedPlan->description)
+                                            <div class="text-sm text-blue-600 dark:text-blue-400 mt-1">{{ $selectedPlan->description }}</div>
+                                        @endif
+                                    </div>
+                                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                                Select a member to automatically load their contribution plan
+                            </p>
                         </div>
                     @endif
 
@@ -294,12 +322,16 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
                 <!-- Status and Notes -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <flux:input 
+                        <flux:select 
                             wire:model="form.status" 
                             label="Status"
                             placeholder="Select status"
                             required
-                        />
+                        >
+                            @foreach($this->statusOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
                         @error('form.status')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
