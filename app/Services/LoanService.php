@@ -66,7 +66,7 @@ class LoanService
                 ->where('status', 'pending')
                 ->first();
 
-            if (! $approval) {
+            if (!$approval) {
                 throw new \Exception('No pending approval found for this level');
             }
 
@@ -97,7 +97,7 @@ class LoanService
                 ->where('status', 'pending')
                 ->first();
 
-            if (! $approval) {
+            if (!$approval) {
                 throw new \Exception('No pending approval found for this level');
             }
 
@@ -186,7 +186,10 @@ class LoanService
      */
     public function getLoans(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Loan::with(['member', 'approver', 'repayments']);
+        $query = Loan::with(['member', 'approver', 'repayments'])
+            ->whereHas('member', function ($q) {
+                $q->forAuthUserLocation();
+            });
 
         // Apply filters
         if (isset($filters['member_id'])) {

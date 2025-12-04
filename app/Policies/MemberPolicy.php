@@ -20,11 +20,22 @@ class MemberPolicy
      */
     public function view(User $user, Member $member): bool
     {
+        // Members can always view their own profile
         if ($member->user_id === $user->id) {
             return true;
         }
 
-        return $user->hasPermission('view_members');
+        // Check permission first
+        if (!$user->hasPermission('view_members')) {
+            return false;
+        }
+
+        // Check location access (Super Admin and System Admin bypass this)
+        if (!$member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -40,11 +51,22 @@ class MemberPolicy
      */
     public function update(User $user, Member $member): bool
     {
+        // Members can update their own profile
         if ($member->user_id === $user->id) {
             return true;
         }
 
-        return $user->hasPermission('edit_members');
+        // Check permission first
+        if (!$user->hasPermission('edit_members')) {
+            return false;
+        }
+
+        // Check location access
+        if (!$member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -52,7 +74,17 @@ class MemberPolicy
      */
     public function delete(User $user, Member $member): bool
     {
-        return $user->hasPermission('delete_members');
+        // Check permission first
+        if (!$user->hasPermission('delete_members')) {
+            return false;
+        }
+
+        // Check location access
+        if (!$member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -60,7 +92,17 @@ class MemberPolicy
      */
     public function approve(User $user, Member $member): bool
     {
-        return $user->hasPermission('approve_members');
+        // Check permission first
+        if (!$user->hasPermission('approve_members')) {
+            return false;
+        }
+
+        // Check location access
+        if (!$member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -68,7 +110,17 @@ class MemberPolicy
      */
     public function restore(User $user, Member $member): bool
     {
-        return $user->hasPermission('edit_members');
+        // Check permission first
+        if (!$user->hasPermission('edit_members')) {
+            return false;
+        }
+
+        // Check location access
+        if (!$member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -76,6 +128,16 @@ class MemberPolicy
      */
     public function forceDelete(User $user, Member $member): bool
     {
-        return $user->hasPermission('delete_members');
+        // Check permission first
+        if (!$user->hasPermission('delete_members')) {
+            return false;
+        }
+
+        // Check location access
+        if (!$member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 }

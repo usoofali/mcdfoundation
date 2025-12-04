@@ -20,7 +20,17 @@ class ContributionPolicy
      */
     public function view(User $user, Contribution $contribution): bool
     {
-        return $user->hasPermission('view_contributions');
+        // Check permission first
+        if (!$user->hasPermission('view_contributions')) {
+            return false;
+        }
+
+        // Check location access via member
+        if (!$contribution->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -36,7 +46,17 @@ class ContributionPolicy
      */
     public function update(User $user, Contribution $contribution): bool
     {
-        return $user->hasPermission('edit_contributions');
+        // Check permission first
+        if (!$user->hasPermission('edit_contributions')) {
+            return false;
+        }
+
+        // Check location access via member
+        if (!$contribution->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -44,7 +64,17 @@ class ContributionPolicy
      */
     public function delete(User $user, Contribution $contribution): bool
     {
-        return $user->hasPermission('delete_contributions');
+        // Check permission first
+        if (!$user->hasPermission('delete_contributions')) {
+            return false;
+        }
+
+        // Check location access via member
+        if (!$contribution->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -52,7 +82,17 @@ class ContributionPolicy
      */
     public function confirm(User $user, Contribution $contribution): bool
     {
-        return $user->hasPermission('confirm_contributions');
+        // Check permission first
+        if (!$user->hasPermission('confirm_contributions')) {
+            return false;
+        }
+
+        // Check location access via member
+        if (!$contribution->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -68,7 +108,17 @@ class ContributionPolicy
      */
     public function restore(User $user, Contribution $contribution): bool
     {
-        return $user->hasPermission('edit_contributions');
+        // Check permission first
+        if (!$user->hasPermission('edit_contributions')) {
+            return false;
+        }
+
+        // Check location access via member
+        if (!$contribution->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -76,6 +126,16 @@ class ContributionPolicy
      */
     public function forceDelete(User $user, Contribution $contribution): bool
     {
-        return $user->hasPermission('delete_contributions');
+        // Check permission first
+        if (!$user->hasPermission('delete_contributions')) {
+            return false;
+        }
+
+        // Check location access via member
+        if (!$contribution->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 }

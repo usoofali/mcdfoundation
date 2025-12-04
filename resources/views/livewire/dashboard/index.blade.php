@@ -109,6 +109,20 @@ new class extends Component
                         <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">
                             Welcome back, {{ auth()->user()->name }}
                         </flux:text>
+                        @if(isset($dashboardData['location_info']) && $dashboardData['location_info'])
+                            <div class="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+                                <flux:icon name="map-pin" class="w-4 h-4" />
+                                <span>
+                                    @if(isset($dashboardData['location_info']['state']))
+                                        <span class="font-medium">{{ $dashboardData['location_info']['state'] }}</span>
+                                    @endif
+                                    @if(isset($dashboardData['location_info']['lga']))
+                                        <span class="mx-1">•</span>
+                                        <span class="font-medium">{{ $dashboardData['location_info']['lga'] }}</span>
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
                     </div>
                     <div>
                         <flux:button 
@@ -251,7 +265,7 @@ new class extends Component
                                                                 <p class="text-sm text-neutral-500 dark:text-neutral-400">
                                                                     <span class="font-medium text-gray-900 dark:text-white">{{ $activity->user->name ?? 'System' }}</span>
                                                                     {{ $activity->action }}
-                                                                    <span class="font-medium text-gray-900 dark:text-white">{{ $activity->entity_type }}</span>
+                                                                    <span class="font-medium text-gray-900 dark:text-white">{{ class_basename($activity->entity_type) }}</span>
                                                                 </p>
                                                             </div>
                                                             <div class="text-right text-sm whitespace-nowrap text-neutral-500 dark:text-neutral-400">

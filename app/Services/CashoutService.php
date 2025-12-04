@@ -222,7 +222,10 @@ class CashoutService
      */
     public function getCashoutRequests(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = CashoutRequest::with(['member', 'verifier', 'approver', 'disburser']);
+        $query = CashoutRequest::with(['member', 'verifier', 'approver', 'disburser'])
+            ->whereHas('member', function ($q) {
+                $q->forAuthUserLocation();
+            });
 
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -270,7 +273,9 @@ class CashoutService
      */
     public function getCashoutStats(array $filters = []): array
     {
-        $query = CashoutRequest::query();
+        $query = CashoutRequest::query()->whereHas('member', function ($q) {
+            $q->forAuthUserLocation();
+        });
 
         if (!empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);

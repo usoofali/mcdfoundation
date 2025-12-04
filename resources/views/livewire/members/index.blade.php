@@ -73,6 +73,7 @@ new #[Layout('components.layouts.app', ['title' => 'Members'])] class extends Co
     public function getMembersProperty(): LengthAwarePaginator
     {
         return Member::query()
+            ->forAuthUserLocation()
             ->with(['state', 'lga', 'contributionPlan', 'healthcareProvider'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {

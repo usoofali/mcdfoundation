@@ -143,7 +143,10 @@ class HealthClaimService
      */
     public function getClaims(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = HealthClaim::with(['member', 'healthcareProvider', 'approver', 'payer']);
+        $query = HealthClaim::with(['member', 'healthcareProvider', 'approver', 'payer'])
+            ->whereHas('member', function ($q) {
+                $q->forAuthUserLocation();
+            });
 
         // Apply filters
         if (isset($filters['member_id'])) {

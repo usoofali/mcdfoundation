@@ -52,6 +52,9 @@ new #[Layout('components.layouts.app', ['title' => 'Program Enrollments'])] clas
     {
         $query = ProgramEnrollment::query()
             ->with(['member', 'program'])
+            ->whereHas('member', function ($q) {
+                $q->forAuthUserLocation();
+            })
             ->when($this->search, function ($query) {
                 $query->whereHas('member', function ($q) {
                     $q->where('full_name', 'like', '%' . $this->search . '%')
@@ -66,14 +69,19 @@ new #[Layout('components.layouts.app', ['title' => 'Program Enrollments'])] clas
             })
             ->latest('enrolled_at');
 
+        // Build base query for stats with location filter
+        $statsQuery = ProgramEnrollment::query()->whereHas('member', function ($q) {
+            $q->forAuthUserLocation();
+        });
+
         return [
             'enrollments' => $query->paginate(15),
             'programs' => Program::active()->orderBy('name')->get(),
             'stats' => [
-                'total' => ProgramEnrollment::count(),
-                'enrolled' => ProgramEnrollment::where('status', 'enrolled')->count(),
-                'completed' => ProgramEnrollment::where('status', 'completed')->count(),
-                'dropped' => ProgramEnrollment::where('status', 'dropped')->count(),
+                'total' => $statsQuery->count(),
+                'enrolled' => (clone $statsQuery)->where('status', 'enrolled')->count(),
+                'completed' => (clone $statsQuery)->where('status', 'completed')->count(),
+                'dropped' => (clone $statsQuery)->where('status', 'dropped')->count(),
             ],
         ];
     }
@@ -197,11 +205,11 @@ new #[Layout('components.layouts.app', ['title' => 'Program Enrollments'])] clas
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                                @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                                                @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                                @elseif($enrollment->status === 'dropped') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                                @endif">
+                                                                        @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                                                        @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                        @elseif($enrollment->status === 'dropped') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                                                        @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                        @endif">
                                         {{ ucfirst($enrollment->status) }}
                                     </span>
                                 </td>

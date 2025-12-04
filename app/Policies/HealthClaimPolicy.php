@@ -20,7 +20,15 @@ class HealthClaimPolicy
      */
     public function view(User $user, HealthClaim $claim): bool
     {
-        return $user->hasPermission('view_claims');
+        if (!$user->hasPermission('view_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -41,7 +49,15 @@ class HealthClaimPolicy
             return false;
         }
 
-        return $user->hasPermission('edit_claims');
+        if (!$user->hasPermission('edit_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -54,7 +70,15 @@ class HealthClaimPolicy
             return false;
         }
 
-        return $user->hasPermission('edit_claims');
+        if (!$user->hasPermission('edit_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -67,7 +91,15 @@ class HealthClaimPolicy
             return false;
         }
 
-        return $user->hasPermission('approve_claims');
+        if (!$user->hasPermission('approve_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -80,7 +112,15 @@ class HealthClaimPolicy
             return false;
         }
 
-        return $user->hasPermission('approve_claims');
+        if (!$user->hasPermission('approve_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -93,7 +133,15 @@ class HealthClaimPolicy
             return false;
         }
 
-        return $user->hasPermission('pay_claims');
+        if (!$user->hasPermission('pay_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -101,7 +149,15 @@ class HealthClaimPolicy
      */
     public function restore(User $user, HealthClaim $claim): bool
     {
-        return $user->hasPermission('edit_claims');
+        if (!$user->hasPermission('edit_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -109,6 +165,14 @@ class HealthClaimPolicy
      */
     public function forceDelete(User $user, HealthClaim $claim): bool
     {
-        return $user->hasPermission('edit_claims');
+        if (!$user->hasPermission('edit_claims')) {
+            return false;
+        }
+
+        if (!$claim->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 }

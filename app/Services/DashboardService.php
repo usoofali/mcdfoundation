@@ -21,12 +21,10 @@ class DashboardService
         $role = $user->role?->name ?? 'member';
 
         return match ($role) {
-            'Super Admin' => $this->getSuperAdminDashboard(),
-            'Project Coordinator' => $this->getProjectCoordinatorDashboard(),
-            'State Coordinator' => $this->getStateCoordinatorDashboard($user),
-            'LG Coordinator' => $this->getLgCoordinatorDashboard($user),
-            'Health Officer' => $this->getHealthOfficerDashboard(),
-            'Treasurer' => $this->getTreasurerDashboard(),
+            'Super Admin', 'System Admin' => $this->getSuperAdminDashboard(),
+            'Finance Officer' => $this->getFinanceOfficerDashboard($user),
+            'Health Officer' => $this->getHealthOfficerDashboard($user),
+            'Program Officer' => $this->getProgramOfficerDashboard($user),
             default => $this->getMemberDashboard($user),
         };
     }
@@ -48,86 +46,53 @@ class DashboardService
     }
 
     /**
-     * Project Coordinator Dashboard - High-level oversight.
+     * Finance Officer Dashboard - Financial operations with location filtering.
      */
-    protected function getProjectCoordinatorDashboard(): array
+    protected function getFinanceOfficerDashboard(User $user): array
     {
         return [
-            'role' => 'project_coordinator',
-            'title' => 'Project Coordinator Dashboard',
-            'stats' => $this->getProjectStats(),
+            'role' => 'finance_officer',
+            'title' => 'Finance Officer Dashboard',
+            'location_info' => $this->getUserLocationInfo($user),
+            'stats' => $this->getFinanceOfficerStats($user),
             'recent_activities' => $this->getRecentActivities(15),
-            'pending_approvals' => $this->getPendingApprovals(['level' => 3]),
-            'quick_actions' => $this->getProjectCoordinatorQuickActions(),
-            'charts' => $this->getProjectCharts(),
+            'pending_approvals' => $this->getPendingLoans($user),
+            'quick_actions' => $this->getFinanceOfficerQuickActions(),
+            'charts' => $this->getFinancialCharts($user),
         ];
     }
 
     /**
-     * State Coordinator Dashboard - State-level management.
+     * Health Officer Dashboard - Health-related statistics with location filtering.
      */
-    protected function getStateCoordinatorDashboard(User $user): array
-    {
-        $stateId = $user->state_id;
-
-        return [
-            'role' => 'state_coordinator',
-            'title' => 'State Coordinator Dashboard',
-            'stats' => $this->getStateStats($stateId),
-            'recent_activities' => $this->getRecentActivities(15, ['state_id' => $stateId]),
-            'pending_approvals' => $this->getPendingApprovals(['level' => 2, 'state_id' => $stateId]),
-            'quick_actions' => $this->getStateCoordinatorQuickActions(),
-            'charts' => $this->getStateCharts($stateId),
-        ];
-    }
-
-    /**
-     * LG Coordinator Dashboard - Local government level.
-     */
-    protected function getLgCoordinatorDashboard(User $user): array
-    {
-        $lgaId = $user->lga_id;
-
-        return [
-            'role' => 'lg_coordinator',
-            'title' => 'LG Coordinator Dashboard',
-            'stats' => $this->getLgaStats($lgaId),
-            'recent_activities' => $this->getRecentActivities(15, ['lga_id' => $lgaId]),
-            'pending_approvals' => $this->getPendingApprovals(['level' => 1, 'lga_id' => $lgaId]),
-            'quick_actions' => $this->getLgCoordinatorQuickActions(),
-            'charts' => $this->getLgaCharts($lgaId),
-        ];
-    }
-
-    /**
-     * Health Officer Dashboard - Health-related statistics.
-     */
-    protected function getHealthOfficerDashboard(): array
+    protected function getHealthOfficerDashboard(User $user): array
     {
         return [
             'role' => 'health_officer',
             'title' => 'Health Officer Dashboard',
-            'stats' => $this->getHealthStats(),
+            'location_info' => $this->getUserLocationInfo($user),
+            'stats' => $this->getHealthStats($user),
             'recent_activities' => $this->getRecentActivities(15, ['type' => 'health']),
-            'pending_approvals' => $this->getPendingHealthClaims(),
+            'pending_approvals' => $this->getPendingHealthClaims($user),
             'quick_actions' => $this->getHealthOfficerQuickActions(),
-            'charts' => $this->getHealthCharts(),
+            'charts' => $this->getHealthCharts($user),
         ];
     }
 
     /**
-     * Treasurer Dashboard - Financial overview.
+     * Program Officer Dashboard - Program management with location filtering.
      */
-    protected function getTreasurerDashboard(): array
+    protected function getProgramOfficerDashboard(User $user): array
     {
         return [
-            'role' => 'treasurer',
-            'title' => 'Treasurer Dashboard',
-            'stats' => $this->getFinancialStats(),
-            'recent_activities' => $this->getRecentActivities(15, ['type' => 'financial']),
-            'pending_approvals' => $this->getPendingPayments(),
-            'quick_actions' => $this->getTreasurerQuickActions(),
-            'charts' => $this->getFinancialCharts(),
+            'role' => 'program_officer',
+            'title' => 'Program Officer Dashboard',
+            'location_info' => $this->getUserLocationInfo($user),
+            'stats' => $this->getProgramOfficerStats($user),
+            'recent_activities' => $this->getRecentActivities(15, ['type' => 'program']),
+            'pending_approvals' => new Collection,
+            'quick_actions' => $this->getProgramOfficerQuickActions(),
+            'charts' => $this->getProgramCharts($user),
         ];
     }
 
@@ -147,6 +112,30 @@ class DashboardService
             'quick_actions' => $this->getMemberQuickActions($user),
             'charts' => $this->getMemberCharts($member),
         ];
+    }
+
+    /**
+     * Get user location information (state and LGA names).
+     * Returns null for Super Admin and System Admin.
+     */
+    protected function getUserLocationInfo(User $user): ?array
+    {
+        // Super Admin and System Admin don't have location restrictions
+        if ($user->hasRole('Super Admin') || $user->hasRole('System Admin')) {
+            return null;
+        }
+
+        $locationInfo = [];
+
+        if ($user->state_id) {
+            $locationInfo['state'] = $user->state?->name ?? 'Unknown State';
+        }
+
+        if ($user->lga_id) {
+            $locationInfo['lga'] = $user->lga?->name ?? 'Unknown LGA';
+        }
+
+        return !empty($locationInfo) ? $locationInfo : null;
     }
 
     /**
@@ -181,7 +170,7 @@ class DashboardService
             ],
             [
                 'title' => 'Total Contributions',
-                'value' => '₦'.number_format($totalContributions, 2),
+                'value' => '₦' . number_format($totalContributions, 2),
                 'icon' => 'currency-dollar',
                 'color' => 'green',
                 'trend' => $this->getContributionTrend(),
@@ -195,21 +184,21 @@ class DashboardService
             ],
             [
                 'title' => 'Outstanding Loans',
-                'value' => '₦'.number_format($outstandingLoans, 2),
+                'value' => '₦' . number_format($outstandingLoans, 2),
                 'icon' => 'banknotes',
                 'color' => 'yellow',
                 'trend' => $this->getLoanTrend(),
             ],
             [
                 'title' => 'Health Claims Paid',
-                'value' => '₦'.number_format($totalClaims, 2),
+                'value' => '₦' . number_format($totalClaims, 2),
                 'icon' => 'heart',
                 'color' => 'red',
                 'trend' => $this->getClaimTrend(),
             ],
             [
                 'title' => 'Fund Balance',
-                'value' => '₦'.number_format($fundBalance, 2),
+                'value' => '₦' . number_format($fundBalance, 2),
                 'icon' => 'wallet',
                 'color' => 'purple',
                 'trend' => $this->getFundTrend(),
@@ -279,7 +268,7 @@ class DashboardService
 
         $totalMembers = $query->count();
         $activeMembers = $query->where('status', 'active')->count();
-        $eligibleMembers = $query->get()->filter(fn ($m) => $m->checkHealthEligibility('outpatient')['eligible'])->count();
+        $eligibleMembers = $query->get()->filter(fn($m) => $m->checkHealthEligibility('outpatient')['eligible'])->count();
 
         return [
             [
@@ -341,7 +330,7 @@ class DashboardService
             ],
             [
                 'title' => 'Contributions Collected',
-                'value' => '₦'.number_format($contributions, 2),
+                'value' => '₦' . number_format($contributions, 2),
                 'icon' => 'currency-dollar',
                 'color' => 'green',
                 'trend' => null,
@@ -350,15 +339,42 @@ class DashboardService
     }
 
     /**
-     * Get health-related statistics.
+     * Get health-related statistics with location filtering.
      */
-    protected function getHealthStats(): array
+    protected function getHealthStats(User $user): array
     {
-        $pendingClaims = HealthClaim::where('status', 'submitted')->count();
-        $approvedClaims = HealthClaim::where('status', 'approved')->count();
-        $paidClaims = HealthClaim::where('status', 'paid')->count();
-        $totalCovered = HealthClaim::where('status', 'paid')->sum('covered_amount');
-        $eligibleMembers = Member::where('status', 'active')->get()->filter(fn ($m) => $m->checkHealthEligibility('outpatient')['eligible'])->count();
+        // Build base query with location filtering
+        $query = HealthClaim::query()->whereHas('member', function ($q) use ($user) {
+            // Super Admin and System Admin see all
+            if ($user->hasRole('Super Admin') || $user->hasRole('System Admin')) {
+                return;
+            }
+
+            // Apply location filters
+            if ($user->state_id) {
+                $q->where('state_id', $user->state_id);
+            }
+            if ($user->lga_id) {
+                $q->where('lga_id', $user->lga_id);
+            }
+        });
+
+        $pendingClaims = (clone $query)->where('status', 'submitted')->count();
+        $approvedClaims = (clone $query)->where('status', 'approved')->count();
+        $paidClaims = (clone $query)->where('status', 'paid')->count();
+        $totalCovered = (clone $query)->where('status', 'paid')->sum('covered_amount');
+
+        // Get eligible members with location filtering
+        $memberQuery = Member::where('status', 'active');
+        if (!($user->hasRole('Super Admin') || $user->hasRole('System Admin'))) {
+            if ($user->state_id) {
+                $memberQuery->where('state_id', $user->state_id);
+            }
+            if ($user->lga_id) {
+                $memberQuery->where('lga_id', $user->lga_id);
+            }
+        }
+        $eligibleMembers = $memberQuery->get()->filter(fn($m) => $m->checkHealthEligibility('outpatient')['eligible'])->count();
 
         return [
             [
@@ -384,7 +400,7 @@ class DashboardService
             ],
             [
                 'title' => 'Total Covered Amount',
-                'value' => '₦'.number_format($totalCovered, 2),
+                'value' => '₦' . number_format($totalCovered, 2),
                 'icon' => 'currency-dollar',
                 'color' => 'green',
                 'trend' => null,
@@ -417,21 +433,21 @@ class DashboardService
         return [
             [
                 'title' => 'Fund Balance',
-                'value' => '₦'.number_format($fundBalance, 2),
+                'value' => '₦' . number_format($fundBalance, 2),
                 'icon' => 'wallet',
                 'color' => 'purple',
                 'trend' => null,
             ],
             [
                 'title' => 'Monthly Inflows',
-                'value' => '₦'.number_format($monthlyInflows, 2),
+                'value' => '₦' . number_format($monthlyInflows, 2),
                 'icon' => 'arrow-trending-up',
                 'color' => 'green',
                 'trend' => null,
             ],
             [
                 'title' => 'Monthly Outflows',
-                'value' => '₦'.number_format($monthlyOutflows, 2),
+                'value' => '₦' . number_format($monthlyOutflows, 2),
                 'icon' => 'arrow-trending-down',
                 'color' => 'red',
                 'trend' => null,
@@ -445,9 +461,128 @@ class DashboardService
             ],
             [
                 'title' => 'Total Disbursed',
-                'value' => '₦'.number_format($loanDisbursements, 2),
+                'value' => '₦' . number_format($loanDisbursements, 2),
                 'icon' => 'banknotes',
                 'color' => 'blue',
+                'trend' => null,
+            ],
+        ];
+    }
+
+    /**
+     * Get Finance Officer statistics with location filtering.
+     */
+    protected function getFinanceOfficerStats(User $user): array
+    {
+        // Build base queries with location filtering
+        $memberQuery = Member::query();
+        $contributionQuery = Contribution::query()->whereHas('member', function ($q) use ($user) {
+            if (!($user->hasRole('Super Admin') || $user->hasRole('System Admin'))) {
+                if ($user->state_id) {
+                    $q->where('state_id', $user->state_id);
+                }
+                if ($user->lga_id) {
+                    $q->where('lga_id', $user->lga_id);
+                }
+            }
+        });
+
+        $loanQuery = Loan::query()->whereHas('member', function ($q) use ($user) {
+            if (!($user->hasRole('Super Admin') || $user->hasRole('System Admin'))) {
+                if ($user->state_id) {
+                    $q->where('state_id', $user->state_id);
+                }
+                if ($user->lga_id) {
+                    $q->where('lga_id', $user->lga_id);
+                }
+            }
+        });
+
+        if (!($user->hasRole('Super Admin') || $user->hasRole('System Admin'))) {
+            if ($user->state_id) {
+                $memberQuery->where('state_id', $user->state_id);
+            }
+            if ($user->lga_id) {
+                $memberQuery->where('lga_id', $user->lga_id);
+            }
+        }
+
+        $totalMembers = $memberQuery->count();
+        $totalContributions = (clone $contributionQuery)->where('status', 'paid')->sum('amount');
+        $pendingVerifications = (clone $contributionQuery)->where('status', 'pending_verification')->count();
+        $outstandingLoans = (clone $loanQuery)->whereIn('status', ['disbursed', 'defaulted'])->get()->sum('outstanding_balance');
+        $pendingLoans = (clone $loanQuery)->where('status', 'pending')->count();
+
+        return [
+            [
+                'title' => 'Total Members',
+                'value' => number_format($totalMembers),
+                'icon' => 'users',
+                'color' => 'blue',
+                'trend' => null,
+            ],
+            [
+                'title' => 'Total Contributions',
+                'value' => '₦' . number_format($totalContributions, 2),
+                'icon' => 'currency-dollar',
+                'color' => 'green',
+                'trend' => null,
+            ],
+            [
+                'title' => 'Pending Verifications',
+                'value' => number_format($pendingVerifications),
+                'icon' => 'clock',
+                'color' => 'yellow',
+                'trend' => null,
+            ],
+            [
+                'title' => 'Outstanding Loans',
+                'value' => '₦' . number_format($outstandingLoans, 2),
+                'icon' => 'banknotes',
+                'color' => 'yellow',
+                'trend' => null,
+            ],
+            [
+                'title' => 'Pending Loan Approvals',
+                'value' => number_format($pendingLoans),
+                'icon' => 'clock',
+                'color' => 'yellow',
+                'trend' => null,
+            ],
+        ];
+    }
+
+    /**
+     * Get Program Officer statistics with location filtering.
+     */
+    protected function getProgramOfficerStats(User $user): array
+    {
+        $memberQuery = Member::query();
+        if (!($user->hasRole('Super Admin') || $user->hasRole('System Admin'))) {
+            if ($user->state_id) {
+                $memberQuery->where('state_id', $user->state_id);
+            }
+            if ($user->lga_id) {
+                $memberQuery->where('lga_id', $user->lga_id);
+            }
+        }
+
+        $totalMembers = $memberQuery->count();
+        $activeMembers = (clone $memberQuery)->where('status', 'active')->count();
+
+        return [
+            [
+                'title' => 'Total Members',
+                'value' => number_format($totalMembers),
+                'icon' => 'users',
+                'color' => 'blue',
+                'trend' => null,
+            ],
+            [
+                'title' => 'Active Members',
+                'value' => number_format($activeMembers),
+                'icon' => 'user-plus',
+                'color' => 'green',
                 'trend' => null,
             ],
         ];
@@ -458,7 +593,7 @@ class DashboardService
      */
     protected function getMemberStats(?Member $member): array
     {
-        if (! $member) {
+        if (!$member) {
             return [];
         }
 
@@ -472,7 +607,7 @@ class DashboardService
         return [
             [
                 'title' => 'Total Contributions',
-                'value' => '₦'.number_format($contributions, 2),
+                'value' => '₦' . number_format($contributions, 2),
                 'icon' => 'currency-dollar',
                 'color' => 'green',
                 'trend' => null,
@@ -486,21 +621,21 @@ class DashboardService
             ],
             [
                 'title' => 'Total Loans',
-                'value' => '₦'.number_format($loans, 2),
+                'value' => '₦' . number_format($loans, 2),
                 'icon' => 'banknotes',
                 'color' => 'blue',
                 'trend' => null,
             ],
             [
                 'title' => 'Outstanding Balance',
-                'value' => '₦'.number_format($outstandingBalance, 2),
+                'value' => '₦' . number_format($outstandingBalance, 2),
                 'icon' => 'exclamation-triangle',
                 'color' => 'yellow',
                 'trend' => null,
             ],
             [
                 'title' => 'Claims Covered',
-                'value' => '₦'.number_format($claims, 2),
+                'value' => '₦' . number_format($claims, 2),
                 'icon' => 'heart',
                 'color' => 'red',
                 'trend' => null,
@@ -536,7 +671,7 @@ class DashboardService
         }
 
         if (isset($filters['type'])) {
-            $query->where('entity_type', 'like', '%'.$filters['type'].'%');
+            $query->where('entity_type', 'like', '%' . $filters['type'] . '%');
         }
 
         return $query->limit($limit)->get();
@@ -547,7 +682,7 @@ class DashboardService
      */
     protected function getMemberRecentActivities(?Member $member): Collection
     {
-        if (! $member) {
+        if (!$member) {
             return new Collection;
         }
 
@@ -591,13 +726,13 @@ class DashboardService
             // Level 3 (Project Coordinator) shows all pending loans, no additional filtering needed
         }
 
-        if (isset($filters['state_id']) && ! isset($filters['level'])) {
+        if (isset($filters['state_id']) && !isset($filters['level'])) {
             $query->whereHas('member', function ($q) use ($filters) {
                 $q->where('state_id', $filters['state_id']);
             });
         }
 
-        if (isset($filters['lga_id']) && ! isset($filters['level'])) {
+        if (isset($filters['lga_id']) && !isset($filters['level'])) {
             $query->whereHas('member', function ($q) use ($filters) {
                 $q->where('lga_id', $filters['lga_id']);
             });
@@ -607,15 +742,49 @@ class DashboardService
     }
 
     /**
-     * Get pending health claims.
+     * Get pending health claims with location filtering.
      */
-    protected function getPendingHealthClaims(): Collection
+    protected function getPendingHealthClaims(User $user): Collection
     {
-        return HealthClaim::where('status', 'submitted')
+        $query = HealthClaim::where('status', 'submitted')
             ->with(['member', 'healthcareProvider'])
+            ->whereHas('member', function ($q) use ($user) {
+                if (!($user->hasRole('Super Admin') || $user->hasRole('System Admin'))) {
+                    if ($user->state_id) {
+                        $q->where('state_id', $user->state_id);
+                    }
+                    if ($user->lga_id) {
+                        $q->where('lga_id', $user->lga_id);
+                    }
+                }
+            })
             ->latest()
-            ->limit(10)
-            ->get();
+            ->limit(10);
+
+        return $query->get();
+    }
+
+    /**
+     * Get pending loans with location filtering.
+     */
+    protected function getPendingLoans(User $user): Collection
+    {
+        $query = Loan::where('status', 'pending')
+            ->with(['member'])
+            ->whereHas('member', function ($q) use ($user) {
+                if (!($user->hasRole('Super Admin') || $user->hasRole('System Admin'))) {
+                    if ($user->state_id) {
+                        $q->where('state_id', $user->state_id);
+                    }
+                    if ($user->lga_id) {
+                        $q->where('lga_id', $user->lga_id);
+                    }
+                }
+            })
+            ->latest()
+            ->limit(10);
+
+        return $query->get();
     }
 
     /**
@@ -682,13 +851,23 @@ class DashboardService
         ];
     }
 
-    protected function getTreasurerQuickActions(): array
+    protected function getFinanceOfficerQuickActions(): array
     {
         return [
             ['title' => 'Verify Contributions', 'url' => route('contributions.verify'), 'icon' => 'check-circle', 'color' => 'green'],
-            ['title' => 'Process Payments', 'url' => route('contributions.verify'), 'icon' => 'currency-dollar', 'color' => 'green'],
-            ['title' => 'View Fund Ledger', 'url' => route('reports.index'), 'icon' => 'wallet', 'color' => 'purple'],
-            ['title' => 'Disburse Loans', 'url' => route('loans.index'), 'icon' => 'banknotes', 'color' => 'blue'],
+            ['title' => 'Approve Loans', 'url' => route('loans.index'), 'icon' => 'check-circle', 'color' => 'blue'],
+            ['title' => 'Record Contribution', 'url' => route('contributions.create'), 'icon' => 'currency-dollar', 'color' => 'green'],
+            ['title' => 'View Reports', 'url' => route('reports.index'), 'icon' => 'chart-bar', 'color' => 'purple'],
+        ];
+    }
+
+    protected function getProgramOfficerQuickActions(): array
+    {
+        return [
+            ['title' => 'View Members', 'url' => route('members.index'), 'icon' => 'users', 'color' => 'blue'],
+            ['title' => 'Add Member', 'url' => route('members.create'), 'icon' => 'user-plus', 'color' => 'blue'],
+            ['title' => 'View Programs', 'url' => route('programs.index'), 'icon' => 'academic-cap', 'color' => 'purple'],
+            ['title' => 'View Reports', 'url' => route('reports.index'), 'icon' => 'chart-bar', 'color' => 'gray'],
         ];
     }
 
@@ -742,7 +921,7 @@ class DashboardService
         ];
     }
 
-    protected function getHealthCharts(): array
+    protected function getHealthCharts(User $user): array
     {
         return [
             'claim_types' => $this->getClaimTypeData(),
@@ -750,7 +929,7 @@ class DashboardService
         ];
     }
 
-    protected function getFinancialCharts(): array
+    protected function getFinancialCharts(User $user): array
     {
         return [
             'fund_flow' => $this->getFundFlowData(),
@@ -758,9 +937,16 @@ class DashboardService
         ];
     }
 
+    protected function getProgramCharts(User $user): array
+    {
+        return [
+            // Program charts can be added here when program features are fully implemented
+        ];
+    }
+
     protected function getMemberCharts(?Member $member): array
     {
-        if (! $member) {
+        if (!$member) {
             return [];
         }
 
@@ -906,7 +1092,7 @@ class DashboardService
             return now()->subMonths($monthsAgo);
         });
 
-        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+        $labels = $months->map(fn($date) => $date->format('M Y'))->toArray();
 
         $data = $months->map(function ($date) {
             return Contribution::where('status', 'paid')
@@ -949,7 +1135,7 @@ class DashboardService
             return now()->subMonths($monthsAgo);
         });
 
-        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+        $labels = $months->map(fn($date) => $date->format('M Y'))->toArray();
 
         $data = $months->map(function ($date) {
             return Member::whereYear('created_at', $date->year)
@@ -972,7 +1158,7 @@ class DashboardService
             $start = now()->subWeeks($weeksAgo)->startOfWeek();
             $end = $start->copy()->endOfWeek();
 
-            return ['start' => $start, 'end' => $end, 'label' => 'Week '.($weeksAgo + 1)];
+            return ['start' => $start, 'end' => $end, 'label' => 'Week ' . ($weeksAgo + 1)];
         });
 
         $labels = $weeks->pluck('label')->toArray();
@@ -1041,7 +1227,7 @@ class DashboardService
             return now()->subMonths($monthsAgo);
         });
 
-        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+        $labels = $months->map(fn($date) => $date->format('M Y'))->toArray();
 
         $data = $months->map(function ($date) use ($stateId) {
             $query = Contribution::where('status', 'paid')
@@ -1096,7 +1282,7 @@ class DashboardService
             return now()->subMonths($monthsAgo);
         });
 
-        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+        $labels = $months->map(fn($date) => $date->format('M Y'))->toArray();
 
         $data = $months->map(function ($date) use ($lgaId) {
             $query = Contribution::where('status', 'paid')
@@ -1146,7 +1332,7 @@ class DashboardService
             return now()->subMonths($monthsAgo);
         });
 
-        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+        $labels = $months->map(fn($date) => $date->format('M Y'))->toArray();
 
         $data = $months->map(function ($date) {
             return HealthClaim::whereYear('claim_date', $date->year)
@@ -1185,7 +1371,7 @@ class DashboardService
             return now()->subMonths($monthsAgo);
         });
 
-        $labels = $months->map(fn ($date) => $date->format('M Y'))->toArray();
+        $labels = $months->map(fn($date) => $date->format('M Y'))->toArray();
 
         $data = $months->map(function ($date) {
             return FundLedger::whereYear('transaction_date', $date->year)
@@ -1201,7 +1387,7 @@ class DashboardService
 
     protected function getMemberContributionHistory(?Member $member): array
     {
-        if (! $member) {
+        if (!$member) {
             return ['labels' => [], 'data' => []];
         }
 
@@ -1211,21 +1397,21 @@ class DashboardService
             ->get();
 
         return [
-            'labels' => $contributions->pluck('payment_date')->map(fn ($date) => $date->format('M Y'))->toArray(),
+            'labels' => $contributions->pluck('payment_date')->map(fn($date) => $date->format('M Y'))->toArray(),
             'data' => $contributions->pluck('amount')->toArray(),
         ];
     }
 
     protected function getMemberLoanHistory(?Member $member): array
     {
-        if (! $member) {
+        if (!$member) {
             return ['labels' => [], 'data' => []];
         }
 
         $loans = $member->loans()->orderBy('created_at')->get();
 
         return [
-            'labels' => $loans->pluck('created_at')->map(fn ($date) => $date->format('M Y'))->toArray(),
+            'labels' => $loans->pluck('created_at')->map(fn($date) => $date->format('M Y'))->toArray(),
             'data' => $loans->pluck('amount')->toArray(),
         ];
     }

@@ -20,7 +20,15 @@ class LoanPolicy
      */
     public function view(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('view_loans');
+        if (!$user->hasPermission('view_loans')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -36,7 +44,15 @@ class LoanPolicy
      */
     public function update(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('edit_loans');
+        if (!$user->hasPermission('edit_loans')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -44,7 +60,15 @@ class LoanPolicy
      */
     public function delete(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('edit_loans');
+        if (!$user->hasPermission('edit_loans')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -52,7 +76,15 @@ class LoanPolicy
      */
     public function approveL1(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('approve_loans_l1');
+        if (!$user->hasPermission('approve_loans_l1')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -60,7 +92,15 @@ class LoanPolicy
      */
     public function approveL2(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('approve_loans_l2');
+        if (!$user->hasPermission('approve_loans_l2')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -68,7 +108,15 @@ class LoanPolicy
      */
     public function approveL3(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('approve_loans_l3');
+        if (!$user->hasPermission('approve_loans_l3')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -76,7 +124,15 @@ class LoanPolicy
      */
     public function disburse(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('disburse_loans');
+        if (!$user->hasPermission('disburse_loans')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -84,7 +140,15 @@ class LoanPolicy
      */
     public function restore(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('edit_loans');
+        if (!$user->hasPermission('edit_loans')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -92,6 +156,14 @@ class LoanPolicy
      */
     public function forceDelete(User $user, Loan $loan): bool
     {
-        return $user->hasPermission('edit_loans');
+        if (!$user->hasPermission('edit_loans')) {
+            return false;
+        }
+
+        if (!$loan->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 }

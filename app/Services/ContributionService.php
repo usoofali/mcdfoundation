@@ -72,7 +72,10 @@ class ContributionService
      */
     public function getContributions(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Contribution::with(['member', 'contributionPlan', 'collector']);
+        $query = Contribution::with(['member', 'contributionPlan', 'collector'])
+            ->whereHas('member', function ($q) {
+                $q->forAuthUserLocation();
+            });
 
         // Apply filters
         if (!empty($filters['member_id'])) {

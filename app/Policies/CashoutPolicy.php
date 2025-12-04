@@ -25,8 +25,17 @@ class CashoutPolicy
             return true;
         }
 
-        // Staff with view permission can see all
-        return $user->hasPermission('view_cashout');
+        // Check permission first
+        if (!$user->hasPermission('view_cashout')) {
+            return false;
+        }
+
+        // Check location access
+        if (!$cashoutRequest->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -48,7 +57,15 @@ class CashoutPolicy
             return false;
         }
 
-        return $user->hasPermission('verify_cashout');
+        if (!$user->hasPermission('verify_cashout')) {
+            return false;
+        }
+
+        if (!$cashoutRequest->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -61,7 +78,15 @@ class CashoutPolicy
             return false;
         }
 
-        return $user->hasPermission('approve_cashout');
+        if (!$user->hasPermission('approve_cashout')) {
+            return false;
+        }
+
+        if (!$cashoutRequest->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -74,7 +99,15 @@ class CashoutPolicy
             return false;
         }
 
-        return $user->hasPermission('disburse_cashout');
+        if (!$user->hasPermission('disburse_cashout')) {
+            return false;
+        }
+
+        if (!$cashoutRequest->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -87,8 +120,17 @@ class CashoutPolicy
             return false;
         }
 
-        // Either verifiers or approvers can reject
-        return $user->hasPermission('verify_cashout') || $user->hasPermission('approve_cashout');
+        // Check permissions
+        if (!($user->hasPermission('verify_cashout') || $user->hasPermission('approve_cashout'))) {
+            return false;
+        }
+
+        // Check location access
+        if (!$cashoutRequest->member->isInUserLocation()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
