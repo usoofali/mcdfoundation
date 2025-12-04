@@ -15,6 +15,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
     public $status = '';
     public $payment_method = '';
     public $member_id = '';
+    public $state_id = '';
+    public $lga_id = '';
     public $date_from = '';
     public $date_to = '';
     public $perPage = 15;
@@ -55,12 +57,25 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         $this->resetPage();
     }
 
+    public function updatedStateId(): void
+    {
+        $this->resetPage();
+        $this->lga_id = '';
+    }
+
+    public function updatedLgaId(): void
+    {
+        $this->resetPage();
+    }
+
     public function clearFilters(): void
     {
         $this->search = '';
         $this->status = '';
         $this->payment_method = '';
         $this->member_id = '';
+        $this->state_id = '';
+        $this->lga_id = '';
         $this->date_from = '';
         $this->date_to = '';
         $this->resetPage();
@@ -118,6 +133,20 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
             'mobile_money' => 'Mobile Money',
         ];
     }
+
+    public function getStatesProperty()
+    {
+        return \App\Models\State::orderBy('name')->get();
+    }
+
+    public function getLgasProperty()
+    {
+        if (!$this->state_id) {
+            return collect();
+        }
+
+        return \App\Models\Lga::where('state_id', $this->state_id)->orderBy('name')->get();
+    }
 }; ?>
 
 <div class="space-y-6 p-6">
@@ -133,7 +162,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                 </flux:text>
             </div>
             <div>
-                <flux:button variant="primary" icon="plus" variant="primary" href="{{ route('contributions.create') }}" class="gap-2">
+                <flux:button variant="primary" icon="plus" variant="primary" href="{{ route('contributions.create') }}"
+                    class="gap-2">
 
                     Record Contribution
                 </flux:button>
@@ -215,37 +245,61 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
             <flux:heading size="sm" class="font-medium text-neutral-900 dark:text-white">
                 Filters
             </flux:heading>
-            <flux:button variant="ghost" size="sm" wire:click="clearFilters">
+            <flux:button size="sm" wire:click="clearFilters">
                 Clear Filters
             </flux:button>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
             <div>
                 <flux:input wire:model.live="search" placeholder="Search by receipt, member name, or reference"
                     icon="magnifying-glass" />
             </div>
 
             <div>
-                <flux:input wire:model.live="status" placeholder="Filter by status" />
+                <flux:select wire:model.live="status" placeholder="Filter by status">
+                    <option value="">All Statuses</option>
+                    @foreach($this->statusOptions as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </flux:select>
             </div>
 
             <div>
-                <flux:input wire:model.live="payment_method" placeholder="Filter by payment method" />
+                <flux:select wire:model.live="payment_method" placeholder="Filter by payment method">
+                    <option value="">All Payment Methods</option>
+                    @foreach($this->paymentMethodOptions as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </flux:select>
+            </div>
+
+            <div>
+                <flux:select wire:model.live="state_id" placeholder="Filter by state">
+                    <option value="">All States</option>
+                    @foreach($this->states as $state)
+                        <option value="{{ $state->id }}">{{ $state->name }}</option>
+                    @endforeach
+                </flux:select>
             </div>
         </div>
 
         <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
-                <flux:input wire:model.live="member_id" placeholder="Filter by member" />
+                <flux:select wire:model.live="lga_id" placeholder="Filter by LGA" :disabled="!$state_id">
+                    <option value="">{{ $state_id ? 'All LGAs' : 'Select state first' }}</option>
+                    @foreach($this->lgas as $lga)
+                        <option value="{{ $lga->id }}">{{ $lga->name }}</option>
+                    @endforeach
+                </flux:select>
             </div>
 
             <div>
-                <flux:input wire:model.live="date_from" type="date" placeholder="From date" />
+                <flux:input wire:model.live="date_from" type="date" label="From date" />
             </div>
 
             <div>
-                <flux:input wire:model.live="date_to" type="date" placeholder="To date" />
+                <flux:input wire:model.live="date_to" type="date" label="To date" />
             </div>
         </div>
     </div>
@@ -295,7 +349,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                     <div>{{ $contribution->member->full_name }}</div>
                                     <div class="text-xs text-neutral-500 dark:text-neutral-400">
-                                        {{ $contribution->member->registration_no }}</div>
+                                        {{ $contribution->member->registration_no }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
                                     {{ $contribution->contributionPlan?->label }}
@@ -311,7 +366,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                     <div>{{ $contribution->payment_method_label }}</div>
                                     @if($contribution->payment_reference)
                                         <div class="text-xs text-neutral-400 dark:text-neutral-500">
-                                            {{ $contribution->payment_reference }}</div>
+                                            {{ $contribution->payment_reference }}
+                                        </div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
@@ -322,7 +378,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                         </div>
                                         @if($contribution->is_member_submitted)
                                             <div class="text-xs text-neutral-400 dark:text-neutral-500">by
-                                                {{ $contribution->uploader->name ?? 'Member' }}</div>
+                                                {{ $contribution->uploader->name ?? 'Member' }}
+                                            </div>
                                         @endif
                                     @else
                                         <span class="text-neutral-400 dark:text-neutral-500 text-xs">No receipt</span>
@@ -330,11 +387,11 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                     @if($contribution->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                     @elseif($contribution->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                                     @elseif($contribution->status === 'overdue') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                                     @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                    @endif">
+                                                                             @if($contribution->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                             @elseif($contribution->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                                                             @elseif($contribution->status === 'overdue') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                                                             @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                            @endif">
                                         {{ $contribution->status_label }}
                                     </span>
                                 </td>
@@ -343,11 +400,10 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <flux:button variant="ghost" size="sm"
-                                            href="{{ route('contributions.show', $contribution) }}">
+                                        <flux:button size="sm" href="{{ route('contributions.show', $contribution) }}">
                                             View
                                         </flux:button>
-                                        <flux:button variant="ghost" size="sm" icon="document-arrow-down"
+                                        <flux:button size="sm" icon="document-arrow-down"
                                             href="{{ route('contributions.receipt.download', $contribution) }}"
                                             title="Download Receipt">
                                         </flux:button>
@@ -362,8 +418,7 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                                 Verify
                                             </flux:button>
                                         @elseif($contribution->status === 'pending')
-                                            <flux:button variant="ghost" size="sm"
-                                                href="{{ route('contributions.edit', $contribution) }}">
+                                            <flux:button size="sm" href="{{ route('contributions.edit', $contribution) }}">
                                                 Edit
                                             </flux:button>
                                         @endif
@@ -393,7 +448,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                     Get started by recording a contribution.
                 </flux:text>
                 <div class="mt-6">
-                    <flux:button variant="primary" icon="plus" variant="primary" href="{{ route('contributions.create') }}" class="gap-2">
+                    <flux:button variant="primary" icon="plus" variant="primary" href="{{ route('contributions.create') }}"
+                        class="gap-2">
 
                         Record Contribution
                     </flux:button>

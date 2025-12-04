@@ -82,8 +82,7 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
                     </flux:text>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <flux:button variant="primary" icon="arrow-left" variant="ghost" href="{{ route('loans.index') }}"
-                        class="gap-2">
+                    <flux:button variant="primary" icon="arrow-left" href="{{ route('loans.index') }}" class="gap-2">
 
                         Back to Loans
                     </flux:button>
@@ -179,17 +178,20 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Member Name</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->member->full_name }}</dd>
+                                            {{ $loan->member->full_name }}
+                                        </dd>
                                     </div>
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Registration Number</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->member->registration_no }}</dd>
+                                            {{ $loan->member->registration_no }}
+                                        </dd>
                                     </div>
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Phone</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->member->phone ?? 'N/A' }}</dd>
+                                            {{ $loan->member->phone ?? 'N/A' }}
+                                        </dd>
                                     </div>
                                 </dl>
                             </div>
@@ -200,22 +202,26 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Loan Type</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->loan_type_label }}</dd>
+                                            {{ $loan->loan_type_label }}
+                                        </dd>
                                     </div>
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Repayment Mode</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->repayment_mode_label }}</dd>
+                                            {{ $loan->repayment_mode_label }}
+                                        </dd>
                                     </div>
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Repayment Period</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->repayment_period }}</dd>
+                                            {{ $loan->repayment_period }}
+                                        </dd>
                                     </div>
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Start Date</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->start_date->format('M d, Y') }}</dd>
+                                            {{ $loan->start_date->format('M d, Y') }}
+                                        </dd>
                                     </div>
                                 </dl>
                             </div>
@@ -242,13 +248,15 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
                                     <div>
                                         <dt class="text-sm text-neutral-500 dark:text-neutral-400">Name</dt>
                                         <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $loan->guarantor_name }}</dd>
+                                            {{ $loan->guarantor_name }}
+                                        </dd>
                                     </div>
                                     @if($loan->guarantor_contact)
                                         <div>
                                             <dt class="text-sm text-neutral-500 dark:text-neutral-400">Contact</dt>
                                             <dd class="text-sm font-medium text-gray-900 dark:text-white">
-                                                {{ $loan->guarantor_contact }}</dd>
+                                                {{ $loan->guarantor_contact }}
+                                            </dd>
                                         </div>
                                     @endif
                                 </dl>
@@ -357,10 +365,10 @@ new #[Layout('components.layouts.app', ['title' => 'Loan Details'])] class exten
                                                 </p>
                                             </div>
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                            @if($approval->status === 'approved') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                            @elseif($approval->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                                            @else bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                                            @endif">
+                                                                        @if($approval->status === 'approved') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                        @elseif($approval->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                                                        @else bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                                                        @endif">
                                                 {{ $approval->status_label }}
                                             </span>
                                         </div>

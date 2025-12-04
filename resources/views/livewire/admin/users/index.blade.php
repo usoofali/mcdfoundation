@@ -14,6 +14,10 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
 
     public string $statusFilter = '';
 
+    public string $stateFilter = '';
+
+    public string $lgaFilter = '';
+
     public array $roles = [];
 
     public function mount(): void
@@ -32,6 +36,17 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
     }
 
     public function updatedStatusFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStateFilter(): void
+    {
+        $this->resetPage();
+        $this->lgaFilter = '';
+    }
+
+    public function updatedLgaFilter(): void
     {
         $this->resetPage();
     }
@@ -77,7 +92,7 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
     public function with(): array
     {
         $query = User::query()
-            ->with('role')
+            ->with(['role', 'member.state', 'member.lga'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
@@ -89,11 +104,35 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
             })
             ->when($this->statusFilter, function ($query) {
                 $query->where('status', $this->statusFilter);
+            })
+            ->when($this->stateFilter, function ($query) {
+                $query->whereHas('member', function ($q) {
+                    $q->where('state_id', $this->stateFilter);
+                });
+            })
+            ->when($this->lgaFilter, function ($query) {
+                $query->whereHas('member', function ($q) {
+                    $q->where('lga_id', $this->lgaFilter);
+                });
             });
 
         return [
             'users' => $query->paginate(15),
         ];
+    }
+
+    public function getStatesProperty()
+    {
+        return \App\Models\State::orderBy('name')->get();
+    }
+
+    public function getLgasProperty()
+    {
+        if (!$this->stateFilter) {
+            return collect();
+        }
+
+        return \App\Models\Lga::where('state_id', $this->stateFilter)->orderBy('name')->get();
     }
 }; ?>
 
@@ -139,6 +178,24 @@ new #[Layout('components.layouts.app', ['title' => 'User Management'])] class ex
                         <option value="">{{ __('All Statuses') }}</option>
                         <option value="active">{{ __('Active') }}</option>
                         <option value="inactive">{{ __('Inactive') }}</option>
+                    </flux:select>
+                </div>
+
+                <!-- State and LGA Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <flux:select wire:model.live="stateFilter" placeholder="{{ __('Filter by State') }}">
+                        <option value="">{{ __('All States') }}</option>
+                        @foreach($this->states as $state)
+                            <option value="{{ $state->id }}">{{ $state->name }}</option>
+                        @endforeach
+                    </flux:select>
+
+                    <flux:select wire:model.live="lgaFilter" placeholder="{{ __('Filter by LGA') }}"
+                        :disabled="!$stateFilter">
+                        <option value="">{{ $stateFilter ? __('All LGAs') : __('Select state first') }}</option>
+                        @foreach($this->lgas as $lga)
+                            <option value="{{ $lga->id }}">{{ $lga->name }}</option>
+                        @endforeach
                     </flux:select>
                 </div>
 

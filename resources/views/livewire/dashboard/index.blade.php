@@ -16,6 +16,18 @@ new class extends Component
 
     public function mount(): void
     {
+        // Redirect members to their dashboard
+        $user = auth()->user();
+        $isStaff = $user->hasRole('Super Admin') || 
+                   $user->hasRole('System Admin') || 
+                   $user->hasRole('Manager') || 
+                   $user->hasRole('Staff');
+        
+        if ($user->member && !$isStaff) {
+            $this->redirect(route('my.dashboard'), navigate: true);
+            return;
+        }
+
         $this->loadDashboardData();
     }
 

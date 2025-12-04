@@ -311,7 +311,8 @@ new class extends Component {
                                         </div>
                                         @if($dependent->notes)
                                             <div class="text-sm text-neutral-500 dark:text-neutral-400">
-                                                {{ Str::limit($dependent->notes, 50) }}</div>
+                                                {{ Str::limit($dependent->notes, 50) }}
+                                            </div>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
@@ -341,12 +342,11 @@ new class extends Component {
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <flux:button variant="ghost" size="sm"
-                                                wire:click="showEditModal({{ $dependent->id }})">
+                                            <flux:button size="sm" wire:click="showEditModal({{ $dependent->id }})">
                                                 Edit
                                             </flux:button>
                                             <flux:modal.trigger name="confirm-delete-dependent-{{ $dependent->id }}">
-                                                <flux:button variant="ghost" size="sm"
+                                                <flux:button size="sm"
                                                     wire:click="$dispatch('open-modal', 'confirm-delete-dependent-{{ $dependent->id }}')">
                                                     Delete
                                                 </flux:button>

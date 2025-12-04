@@ -197,11 +197,11 @@ new #[Layout('components.layouts.app', ['title' => 'Program Enrollments'])] clas
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                        @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                                        @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                        @elseif($enrollment->status === 'dropped') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                                        @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                        @endif">
+                                                                @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                                                @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                @elseif($enrollment->status === 'dropped') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                @endif">
                                         {{ ucfirst($enrollment->status) }}
                                     </span>
                                 </td>
@@ -218,12 +218,10 @@ new #[Layout('components.layouts.app', ['title' => 'Program Enrollments'])] clas
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex flex-wrap items-center gap-2">
                                         @if($enrollment->status === 'enrolled')
-                                            <flux:button variant="ghost" size="sm"
-                                                wire:click="markAsCompleted({{ $enrollment->id }})">
+                                            <flux:button size="sm" wire:click="markAsCompleted({{ $enrollment->id }})">
                                                 Mark Complete
                                             </flux:button>
-                                            <flux:button variant="ghost" size="sm"
-                                                wire:click="markAsDropped({{ $enrollment->id }})">
+                                            <flux:button size="sm" wire:click="markAsDropped({{ $enrollment->id }})">
                                                 Mark Dropped
                                             </flux:button>
                                         @endif

@@ -25,7 +25,7 @@ new #[Layout('components.layouts.app', ['title' => 'Healthcare Provider Details'
                     wire:navigate>
                     Edit
                 </flux:button>
-                <flux:button variant="ghost" href="{{ route('admin.healthcare-providers.index') }}" wire:navigate>
+                <flux:button href="{{ route('admin.healthcare-providers.index') }}" wire:navigate>
                     Back to List
                 </flux:button>
             </div>

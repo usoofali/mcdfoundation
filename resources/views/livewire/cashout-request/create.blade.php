@@ -75,7 +75,7 @@ new #[Layout('components.layouts.app', ['title' => 'Request Cashout'])] class ex
                 </flux:text>
             </div>
             <div>
-                <flux:button variant="ghost" href="{{ route('dashboard') }}" wire:navigate>
+                <flux:button href="{{ route('dashboard') }}" wire:navigate>
                     Back to Dashboard
                 </flux:button>
             </div>
@@ -218,7 +218,7 @@ new #[Layout('components.layouts.app', ['title' => 'Request Cashout'])] class ex
                     </div>
 
                     <div class="flex justify-end gap-3 border-t border-neutral-200 dark:border-neutral-700 pt-6">
-                        <flux:button variant="ghost" href="{{ route('dashboard') }}" wire:navigate>
+                        <flux:button href="{{ route('dashboard') }}" wire:navigate>
                             Cancel
                         </flux:button>
                         <flux:button type="submit" variant="primary" :disabled="!auth()->user()->account_number">

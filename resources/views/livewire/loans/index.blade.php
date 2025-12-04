@@ -101,13 +101,16 @@ new class extends Component {
                             </th>
                             <th
                                 class="px-2 py-3 text-left text-xs font-semibold sm:px-4 sm:text-sm hidden sm:table-cell">
-                                {{ __('Amount') }}</th>
+                                {{ __('Amount') }}
+                            </th>
                             <th
                                 class="px-2 py-3 text-left text-xs font-semibold sm:px-4 sm:text-sm hidden sm:table-cell">
-                                {{ __('Approved') }}</th>
+                                {{ __('Approved') }}
+                            </th>
                             <th
                                 class="px-2 py-3 text-left text-xs font-semibold sm:px-4 sm:text-sm hidden sm:table-cell">
-                                {{ __('Balance') }}</th>
+                                {{ __('Balance') }}
+                            </th>
                             <th class="px-2 py-3 text-left text-xs font-semibold sm:px-4 sm:text-sm">{{ __('Status') }}
                             </th>
                             <th class="px-2 py-3 text-left text-xs font-semibold sm:px-4 sm:text-sm">{{ __('Actions') }}
@@ -121,9 +124,11 @@ new class extends Component {
                                 </td>
                                 <td class="px-2 py-3 sm:px-4">
                                     <div class="text-xs font-medium text-neutral-900 sm:text-sm dark:text-white">
-                                        {{ $loan->member->full_name }}</div>
+                                        {{ $loan->member->full_name }}
+                                    </div>
                                     <div class="text-xs text-neutral-500 dark:text-neutral-400">
-                                        {{ $loan->member->registration_no }}</div>
+                                        {{ $loan->member->registration_no }}
+                                    </div>
                                     <div class="mt-1 text-xs font-medium sm:hidden">
                                         {{ __('Amount:') }} {{ number_format($loan->amount, 2) }}
                                         @if($loan->approved_amount)
@@ -133,25 +138,28 @@ new class extends Component {
                                     </div>
                                 </td>
                                 <td class="hidden px-2 py-3 text-xs sm:table-cell sm:px-4 sm:text-sm">
-                                    {{ number_format($loan->amount, 2) }}</td>
+                                    {{ number_format($loan->amount, 2) }}
+                                </td>
                                 <td class="hidden px-2 py-3 text-xs sm:table-cell sm:px-4 sm:text-sm">
-                                    {{ $loan->approved_amount ? number_format($loan->approved_amount, 2) : __('N/A') }}</td>
+                                    {{ $loan->approved_amount ? number_format($loan->approved_amount, 2) : __('N/A') }}
+                                </td>
                                 <td class="hidden px-2 py-3 text-xs sm:table-cell sm:px-4 sm:text-sm">
-                                    {{ number_format($loan->outstanding_balance, 2) }}</td>
+                                    {{ number_format($loan->outstanding_balance, 2) }}
+                                </td>
                                 <td class="px-2 py-3 sm:px-4">
                                     <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
-                                            {{ $loan->status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}
-                                            {{ $loan->status === 'approved' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
-                                            {{ $loan->status === 'disbursed' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}
-                                            {{ $loan->status === 'repaid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
-                                            {{ $loan->status === 'defaulted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
-                                        ">
+                                                {{ $loan->status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}
+                                                {{ $loan->status === 'approved' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
+                                                {{ $loan->status === 'disbursed' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}
+                                                {{ $loan->status === 'repaid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
+                                                {{ $loan->status === 'defaulted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
+                                            ">
                                         {{ ucfirst(str_replace('_', ' ', $loan->status)) }}
                                     </span>
                                 </td>
                                 <td class="px-2 py-3 sm:px-4">
                                     <div class="flex items-center gap-2">
-                                        <flux:button href="{{ route('loans.show', $loan) }}" variant="ghost" size="sm"
+                                        <flux:button href="{{ route('loans.show', $loan) }}" size="sm"
                                             class="w-full sm:w-auto" wire:navigate>
                                             {{ __('View') }}
                                         </flux:button>

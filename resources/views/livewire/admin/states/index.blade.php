@@ -120,7 +120,7 @@ new #[Layout('components.layouts.app', ['title' => 'States Management'])] class 
                         {{ $editingId ? 'Update' : 'Add' }} State
                     </flux:button>
                     @if($editingId)
-                        <flux:button type="button" variant="ghost" wire:click="cancelEdit">
+                        <flux:button type="button" wire:click="cancelEdit">
                             Cancel
                         </flux:button>
                     @endif

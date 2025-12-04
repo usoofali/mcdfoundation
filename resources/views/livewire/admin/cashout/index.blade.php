@@ -172,7 +172,7 @@ new #[Layout('components.layouts.app', ['title' => 'Cashout Requests'])] class e
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <flux:button variant="ghost" size="sm" href="{{ route('admin.cashout.show', $request) }}"
+                                    <flux:button  size="sm" href="{{ route('admin.cashout.show', $request) }}"
                                         wire:navigate>
                                         View
                                     </flux:button>

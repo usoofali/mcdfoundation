@@ -37,7 +37,7 @@ new #[Layout('components.layouts.app', ['title' => 'LGAs Management'])] class ex
             $this->dispatch('notify', [
                 'type' => 'success',
                 'message' => 'LGA updated successfully.',
-               ]);
+            ]);
         } else {
             Lga::create($validated);
             $this->dispatch('notify', [
@@ -134,7 +134,7 @@ new #[Layout('components.layouts.app', ['title' => 'LGAs Management'])] class ex
                         {{ $editingId ? 'Update' : 'Add' }} LGA
                     </flux:button>
                     @if($editingId)
-                        <flux:button type="button" variant="ghost" wire:click="cancelEdit">
+                        <flux:button type="button" wire:click="cancelEdit">
                             Cancel
                         </flux:button>
                     @endif

@@ -71,7 +71,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Program'])] class ext
                 </flux:text>
             </div>
             <div>
-                <flux:button variant="ghost" href="{{ route('programs.index') }}" wire:navigate>
+                <flux:button href="{{ route('programs.index') }}" wire:navigate>
                     Back to Programs
                 </flux:button>
             </div>
@@ -80,23 +80,25 @@ new #[Layout('components.layouts.app', ['title' => 'Create Program'])] class ext
 
     <!-- Form -->
     <form wire:submit="save">
-        <div class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+        <div
+            class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
             <div class="space-y-6">
                 <!-- Basic Information -->
                 <div>
                     <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white">
                         Basic Information
                     </flux:heading>
-                    
+
                     <div class="space-y-4">
                         <div>
-                            <flux:input wire:model="name" label="Program Name" placeholder="e.g., Tailoring & Fashion Design" required />
+                            <flux:input wire:model="name" label="Program Name"
+                                placeholder="e.g., Tailoring & Fashion Design" required />
                             @error('name') <flux:error>{{ $message }}</flux:error> @enderror
                         </div>
 
                         <div>
                             <flux:label>Description</flux:label>
-                            <flux:textarea wire:model="description" rows="4" 
+                            <flux:textarea wire:model="description" rows="4"
                                 placeholder="Describe the program objectives, content, and expected outcomes..." />
                             @error('description') <flux:error>{{ $message }}</flux:error> @enderror
                         </div>
@@ -113,7 +115,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Program'])] class ext
                         </div>
 
                         <div>
-                            <flux:input wire:model="capacity" type="number" min="1" label="Capacity" 
+                            <flux:input wire:model="capacity" type="number" min="1" label="Capacity"
                                 placeholder="Leave empty for unlimited" />
                             <flux:text class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                                 Maximum number of members that can enroll (leave empty for unlimited capacity)
@@ -135,7 +137,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Program'])] class ext
 
                     <div class="space-y-4">
                         <div>
-                            <flux:input wire:model="min_contributions" type="number" min="0" 
+                            <flux:input wire:model="min_contributions" type="number" min="0"
                                 label="Minimum Contributions Required" required />
                             <flux:text class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                                 Number of paid contributions a member must have (0 = no requirement)
@@ -145,13 +147,13 @@ new #[Layout('components.layouts.app', ['title' => 'Create Program'])] class ext
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <flux:input wire:model="min_age" type="number" min="1" max="150" 
-                                    label="Minimum Age" placeholder="Optional" />
+                                <flux:input wire:model="min_age" type="number" min="1" max="150" label="Minimum Age"
+                                    placeholder="Optional" />
                                 @error('min_age') <flux:error>{{ $message }}</flux:error> @enderror
                             </div>
                             <div>
-                                <flux:input wire:model="max_age" type="number" min="1" max="150" 
-                                    label="Maximum Age" placeholder="Optional" />
+                                <flux:input wire:model="max_age" type="number" min="1" max="150" label="Maximum Age"
+                                    placeholder="Optional" />
                                 @error('max_age') <flux:error>{{ $message }}</flux:error> @enderror
                             </div>
                         </div>
@@ -160,7 +162,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Program'])] class ext
 
                 <!-- Actions -->
                 <div class="flex justify-end gap-3 border-t border-neutral-200 dark:border-neutral-700 pt-6">
-                    <flux:button variant="ghost" href="{{ route('programs.index') }}" wire:navigate>
+                    <flux:button href="{{ route('programs.index') }}" wire:navigate>
                         Cancel
                     </flux:button>
                     <flux:button type="submit" variant="primary">

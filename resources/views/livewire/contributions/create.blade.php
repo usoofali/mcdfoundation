@@ -175,7 +175,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
                             @foreach($this->members as $member)
                                 <div class="px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 cursor-pointer border-b border-neutral-100 dark:border-neutral-600 last:border-b-0"
                                      wire:click="selectMember({{ $member->id }})">
-                                    <div class="font-medium text-gray-900 dark:text-white">{{ $member->full_name }}</div>
+                                    <div class="font-medium text-gray-900 dark:text-white">{{ $member->full_name.' '.$member->family_name }}</div>
                                     <div class="text-sm text-neutral-500 dark:text-neutral-400">{{ $member->registration_no }}</div>
                                 </div>
                             @endforeach
@@ -189,7 +189,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                 </svg>
                                 <div>
-                                    <div class="font-medium text-green-800">{{ $selectedMember->full_name }}</div>
+                                    <div class="font-medium text-green-800">{{ $selectedMember->full_name.' '.$selectedMember->family_name }}</div>
                                     <div class="text-sm text-green-600">{{ $selectedMember->registration_no }}</div>
                                 </div>
                             </div>
@@ -257,12 +257,15 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
                 <!-- Payment Details -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <flux:input 
+                        <flux:select 
                             wire:model="form.payment_method" 
                             label="Payment Method"
-                            placeholder="Select payment method"
                             required
-                        />
+                        >
+                            @foreach($this->paymentMethodOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
                         @error('form.payment_method')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror

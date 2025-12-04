@@ -37,7 +37,7 @@ new #[Layout('components.layouts.app', ['title' => 'Add Healthcare Provider'])] 
         <!-- Header -->
         <div class="flex items-center justify-between">
             <flux:heading size="xl" class="font-bold">Add Healthcare Provider</flux:heading>
-            <flux:button variant="ghost" href="{{ route('admin.healthcare-providers.index') }}" wire:navigate>
+            <flux:button href="{{ route('admin.healthcare-providers.index') }}" wire:navigate>
                 Back to List
             </flux:button>
         </div>
@@ -62,8 +62,7 @@ new #[Layout('components.layouts.app', ['title' => 'Add Healthcare Provider'])] 
 
                 <div class="flex gap-3">
                     <flux:button type="submit" variant="primary">Create Provider</flux:button>
-                    <flux:button type="button" variant="ghost" href="{{ route('admin.healthcare-providers.index') }}"
-                        wire:navigate>
+                    <flux:button type="button" href="{{ route('admin.healthcare-providers.index') }}" wire:navigate>
                         Cancel
                     </flux:button>
                 </div>

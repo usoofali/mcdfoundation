@@ -48,7 +48,7 @@ new #[Layout('components.layouts.app', ['title' => 'Program Details'])] class ex
                 </div>
             </div>
             <div class="flex gap-2">
-                <flux:button variant="ghost" href="{{ route('programs.index') }}" wire:navigate>
+                <flux:button href="{{ route('programs.index') }}" wire:navigate>
                     Back to Programs
                 </flux:button>
                 @can('update', $program)
@@ -176,10 +176,10 @@ new #[Layout('components.layouts.app', ['title' => 'Program Details'])] class ex
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                                @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                                                @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                                @endif">
+                                                                        @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                                                        @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                        @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                        @endif">
                                                 {{ ucfirst($enrollment->status) }}
                                             </span>
                                         </td>

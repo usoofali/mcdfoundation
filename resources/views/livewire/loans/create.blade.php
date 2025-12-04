@@ -43,7 +43,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
     {
         $this->member_id = $memberId;
         $member = Member::find($memberId);
-        $this->memberSearch = $member->full_name . ' (' . $member->registration_no . ')';
+        $this->memberSearch = $member->full_name . ' ' . $member->family_name . ' (' . $member->registration_no . ')';
         $this->searchResults = [];
     }
 
@@ -177,7 +177,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
                     </flux:text>
                 </div>
                 <div>
-                    <flux:button variant="primary" icon="arrow-left" variant="ghost" href="{{ route('loans.index') }}"
+                    <flux:button variant="primary" icon="arrow-left"  href="{{ route('loans.index') }}"
                         class="gap-2">
 
                         Back to Loans
@@ -192,8 +192,7 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
             <form wire:submit="submitLoanApplication" class="space-y-6">
                 <!-- Member Selection -->
                 <div>
-                    <flux:label for="member_search" value="Search Member" />
-                    <flux:input id="member_search" wire:model.live="memberSearch"
+                    <flux:input wire:model.live="memberSearch" label="Search Member"
                         placeholder="Search by name or registration number" required />
                     @error('member_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
 
@@ -203,7 +202,8 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
                             @foreach($searchResults as $member)
                                 <li wire:key="member-{{ $member['id'] }}" wire:click="selectMember({{ $member['id'] }})"
                                     class="p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer flex justify-between items-center">
-                                    <span class="text-gray-900 dark:text-white">{{ $member['full_name'] }}
+                                    <span
+                                        class="text-gray-900 dark:text-white">{{ $member['full_name'] . ' ' . $member['family_name'] }}
                                         ({{ $member['registration_no'] }})</span>
                                     @if($member_id === $member['id'])
                                         <flux:icon name="check-circle" class="text-green-500 dark:text-green-400" />
@@ -220,74 +220,73 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
                 <!-- Loan Type -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <flux:label for="loan_type" value="Loan Type" />
-                        <flux:input id="loan_type" wire:model.live="loan_type" placeholder="Select loan type"
-                            required />
+                        <flux:select wire:model.live="loan_type" label="Loan Type" required>
+                            @foreach($this->loanTypeOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
                         @error('loan_type') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
-                    @if($loan_type === 'item')
-                        <div>
-                            <flux:label for="item_description" value="Item Description" />
-                            <flux:textarea id="item_description" wire:model="item_description"
-                                placeholder="Describe the item you want to purchase" required />
-                            @error('item_description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                        </div>
-                    @endif
+                    <div>
+                        <flux:input wire:model.live="amount" type="number" step="0.01" label="Loan Amount (₦)"
+                            placeholder="e.g., 50000.00" required />
+                        @error('amount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
                 </div>
 
-                <!-- Amount -->
-                <div>
-                    <flux:label for="amount" value="Loan Amount" />
-                    <flux:input id="amount" wire:model.live="amount" type="number" step="0.01"
-                        placeholder="e.g., 50000.00" required />
-                    @error('amount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                <!-- Item Description (if item loan) -->
+                @if($loan_type === 'item')
+                    <div>
+                        <flux:textarea wire:model="item_description" label="Item Description"
+                            placeholder="Describe the item you want to purchase" required />
+                        @error('item_description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+                @endif
 
                 <!-- Repayment Details -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <flux:label for="repayment_mode" value="Repayment Mode" />
-                        <flux:input id="repayment_mode" wire:model.live="repayment_mode"
-                            placeholder="Select repayment mode" required />
+                        <flux:select wire:model.live="repayment_mode" label="Repayment Mode" required>
+                            @foreach($this->repaymentModeOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
                         @error('repayment_mode') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
-                        <flux:label for="repayment_period" value="Repayment Period" />
-                        <flux:input id="repayment_period" wire:model.live="repayment_period"
-                            placeholder="Select repayment period" required />
+                        <flux:select wire:model.live="repayment_period" label="Repayment Period" required>
+                            @foreach($this->repaymentPeriodOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
                         @error('repayment_period') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
-                </div>
 
-                <!-- Start Date -->
-                <div>
-                    <flux:label for="start_date" value="Loan Start Date" />
-                    <flux:input id="start_date" wire:model="start_date" type="date" required />
-                    @error('start_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    <div>
+                        <flux:input wire:model="start_date" type="date" label="Start Date" required />
+                        @error('start_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
                 </div>
 
                 <!-- Security/Collateral -->
                 <div>
-                    <flux:label for="security_description" value="Security/Collateral Description" />
-                    <flux:textarea id="security_description" wire:model="security_description"
-                        placeholder="Describe any security or collateral provided" />
+                    <flux:textarea wire:model="security_description" label="Security/Collateral (Optional)"
+                        placeholder="Describe any security or collateral you can provide" />
                     @error('security_description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Guarantor Information -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <flux:label for="guarantor_name" value="Guarantor Name" />
-                        <flux:input id="guarantor_name" wire:model="guarantor_name"
+                        <flux:input wire:model="guarantor_name" label="Guarantor Name (Optional)"
                             placeholder="Full name of guarantor" />
                         @error('guarantor_name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
-                        <flux:label for="guarantor_contact" value="Guarantor Contact" />
-                        <flux:input id="guarantor_contact" wire:model="guarantor_contact"
+                        <flux:input wire:model="guarantor_contact" label="Guarantor Contact (Optional)"
                             placeholder="Phone number or email" />
                         @error('guarantor_contact') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
@@ -295,16 +294,18 @@ new #[Layout('components.layouts.app', ['title' => 'Create Loan'])] class extend
 
                 <!-- Remarks -->
                 <div>
-                    <flux:label for="remarks" value="Additional Remarks" />
-                    <flux:textarea id="remarks" wire:model="remarks"
-                        placeholder="Any additional information or remarks" />
+                    <flux:textarea wire:model="remarks" label="Additional Remarks (Optional)"
+                        placeholder="Any additional information" />
                     @error('remarks') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Submit Button -->
-                <div class="flex justify-end">
+                <div class="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                    <flux:button :href="route('loans.index')"  wire:navigate>
+                        {{ __('Cancel') }}
+                    </flux:button>
                     <flux:button variant="primary" type="submit">
-                        Submit Loan Application
+                        {{ __('Submit Application') }}
                     </flux:button>
                 </div>
             </form>

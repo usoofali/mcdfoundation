@@ -127,7 +127,7 @@ new #[Layout('components.layouts.app', ['title' => 'Process Cashout Request'])] 
                 </div>
             </div>
             <div>
-                <flux:button variant="ghost" href="{{ route('admin.cashout.index') }}" wire:navigate>
+                <flux:button  href="{{ route('admin.cashout.index') }}" wire:navigate>
                     Back to List
                 </flux:button>
             </div>
@@ -317,7 +317,7 @@ new #[Layout('components.layouts.app', ['title' => 'Process Cashout Request'])] 
                 <div class="space-y-4">
                     <flux:textarea wire:model="rejectionReason" label="Reason for Rejection" rows="4" required />
                     <div class="flex gap-2 justify-end">
-                        <flux:button wire:click="$set('showRejectModal', false)" variant="ghost">
+                        <flux:button wire:click="$set('showRejectModal', false)" >
                             Cancel
                         </flux:button>
                         <flux:button wire:click="reject" variant="danger">

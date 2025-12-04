@@ -68,32 +68,35 @@ new #[Layout('components.layouts.app', ['title' => 'User Details'])] class exten
     <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
         <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
             <!-- User Profile Header -->
-            <div class="flex items-center space-x-6 mb-8">
-                <div class="flex-shrink-0">
-                    <div class="h-20 w-20 rounded-full bg-neutral-200 dark:bg-neutral-600 flex items-center justify-center">
-                        <span class="text-2xl font-medium text-neutral-600 dark:text-neutral-300">
-                            {{ $user->initials() }}
-                        </span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-8">
+                <div class="flex items-center gap-4 sm:gap-6 flex-1">
+                    <div class="flex-shrink-0">
+                        <div class="h-20 w-20 rounded-full bg-neutral-200 dark:bg-neutral-600 flex items-center justify-center">
+                            <span class="text-2xl font-medium text-neutral-600 dark:text-neutral-300">
+                                {{ $user->initials() }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white truncate">{{ $user->name }}</h1>
+                        <p class="text-neutral-600 dark:text-neutral-400 truncate">{{ $user->email }}</p>
+                        <div class="flex flex-wrap items-center gap-2 mt-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                {{ $user->role?->name ?? 'No Role' }}
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $user->status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                {{ ucfirst($user->status) }}
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $user->name }}</h1>
-                    <p class="text-neutral-600 dark:text-neutral-400">{{ $user->email }}</p>
-                    <div class="flex items-center space-x-4 mt-2">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            {{ $user->role?->name ?? 'No Role' }}
-                        </span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $user->status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
-                            {{ ucfirst($user->status) }}
-                        </span>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
                     @if($user->id !== auth()->id())
                         <flux:modal.trigger name="confirm-toggle-status-user-{{ $user->id }}">
                             <flux:button 
                                 variant="{{ $user->status === 'active' ? 'danger' : 'primary' }}"
                                 wire:click="$dispatch('open-modal', 'confirm-toggle-status-user-{{ $user->id }}')"
+                                class="flex-1 sm:flex-none"
                             >
                                 {{ $user->status === 'active' ? __('Deactivate') : __('Activate') }}
                             </flux:button>
@@ -103,6 +106,7 @@ new #[Layout('components.layouts.app', ['title' => 'User Details'])] class exten
                             <flux:button 
                                 variant="danger"
                                 wire:click="$dispatch('open-modal', 'confirm-delete-user-{{ $user->id }}')"
+                                class="flex-1 sm:flex-none"
                             >
                                 {{ __('Delete User') }}
                             </flux:button>

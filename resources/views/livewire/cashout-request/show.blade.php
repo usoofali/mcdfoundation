@@ -37,7 +37,7 @@ new #[Layout('components.layouts.app', ['title' => 'Cashout Request Details'])] 
                 </div>
             </div>
             <div>
-                <flux:button variant="ghost" href="{{ route('dashboard') }}" wire:navigate>
+                <flux:button href="{{ route('dashboard') }}" wire:navigate>
                     Back to Dashboard
                 </flux:button>
             </div>
@@ -149,7 +149,8 @@ new #[Layout('components.layouts.app', ['title' => 'Cashout Request Details'])] 
                                 </div>
                                 @if($request->disbursement_reference)
                                     <div class="text-xs font-mono text-neutral-600 mt-1">Ref:
-                                        {{ $request->disbursement_reference }}</div>
+                                        {{ $request->disbursement_reference }}
+                                    </div>
                                 @endif
                             </div>
                         </div>

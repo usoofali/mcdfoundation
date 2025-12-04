@@ -46,8 +46,8 @@ class ReportService
             'by_status' => $members->groupBy('status')->map->count(),
             'by_state' => $members->groupBy('state.name')->map->count(),
             'by_lga' => $members->groupBy('lga.name')->map->count(),
-            'total_dependents' => $members->sum(fn ($m) => $m->dependents->count()),
-            'eligible_members' => $members->filter(fn ($m) => $m->checkHealthEligibility('outpatient')['eligible'])->count(),
+            'total_dependents' => $members->sum(fn($m) => $m->dependents->count()),
+            'eligible_members' => $members->filter(fn($m) => $m->checkHealthEligibility('outpatient')['eligible'])->count(),
             'new_registrations' => $members->where('created_at', '>=', now()->subMonth())->count(),
             'members' => $members->map(function ($member) {
                 return [
@@ -77,6 +77,18 @@ class ReportService
         $query = Contribution::query();
 
         // Apply filters
+        if (isset($filters['state_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('state_id', $filters['state_id']);
+            });
+        }
+
+        if (isset($filters['lga_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('lga_id', $filters['lga_id']);
+            });
+        }
+
         if (isset($filters['member_id'])) {
             $query->where('member_id', $filters['member_id']);
         }
@@ -148,6 +160,18 @@ class ReportService
         $query = Loan::query();
 
         // Apply filters
+        if (isset($filters['state_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('state_id', $filters['state_id']);
+            });
+        }
+
+        if (isset($filters['lga_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('lga_id', $filters['lga_id']);
+            });
+        }
+
         if (isset($filters['member_id'])) {
             $query->where('member_id', $filters['member_id']);
         }
@@ -174,8 +198,8 @@ class ReportService
             'total_loans' => $loans->count(),
             'total_amount' => $loans->sum('amount'),
             'total_disbursed' => $loans->where('status', 'disbursed')->sum('amount'),
-            'total_repaid' => $loans->sum(fn ($l) => $l->repayments->sum('amount')),
-            'outstanding_balance' => $loans->sum(fn ($l) => $l->outstanding_balance),
+            'total_repaid' => $loans->sum(fn($l) => $l->repayments->sum('amount')),
+            'outstanding_balance' => $loans->sum(fn($l) => $l->outstanding_balance),
             'by_status' => $loans->groupBy('status')->map(function ($group) {
                 return [
                     'count' => $group->count(),
@@ -217,6 +241,18 @@ class ReportService
         $query = HealthClaim::query();
 
         // Apply filters
+        if (isset($filters['state_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('state_id', $filters['state_id']);
+            });
+        }
+
+        if (isset($filters['lga_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('lga_id', $filters['lga_id']);
+            });
+        }
+
         if (isset($filters['member_id'])) {
             $query->where('member_id', $filters['member_id']);
         }
@@ -289,6 +325,18 @@ class ReportService
         $query = FundLedger::query();
 
         // Apply filters
+        if (isset($filters['state_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('state_id', $filters['state_id']);
+            });
+        }
+
+        if (isset($filters['lga_id'])) {
+            $query->whereHas('member', function ($q) use ($filters) {
+                $q->where('lga_id', $filters['lga_id']);
+            });
+        }
+
         if (isset($filters['type'])) {
             $query->where('type', $filters['type']);
         }
@@ -368,8 +416,8 @@ class ReportService
 
         $members = $query->with(['state', 'lga', 'contributions'])->get();
 
-        $eligibleOutpatient = $members->filter(fn ($m) => $m->checkHealthEligibility('outpatient')['eligible']);
-        $eligibleInpatient = $members->filter(fn ($m) => $m->checkHealthEligibility('inpatient')['eligible']);
+        $eligibleOutpatient = $members->filter(fn($m) => $m->checkHealthEligibility('outpatient')['eligible']);
+        $eligibleInpatient = $members->filter(fn($m) => $m->checkHealthEligibility('inpatient')['eligible']);
 
         $report = [
             'total_members' => $members->count(),
@@ -381,8 +429,8 @@ class ReportService
             'eligibility_rate_inpatient' => $members->count() > 0 ?
                 ($eligibleInpatient->count() / $members->count()) * 100 : 0,
             'by_state' => $members->groupBy('state.name')->map(function ($group) {
-                $eligibleOutpatient = $group->filter(fn ($m) => $m->checkHealthEligibility('outpatient')['eligible']);
-                $eligibleInpatient = $group->filter(fn ($m) => $m->checkHealthEligibility('inpatient')['eligible']);
+                $eligibleOutpatient = $group->filter(fn($m) => $m->checkHealthEligibility('outpatient')['eligible']);
+                $eligibleInpatient = $group->filter(fn($m) => $m->checkHealthEligibility('inpatient')['eligible']);
 
                 return [
                     'total' => $group->count(),
@@ -422,9 +470,11 @@ class ReportService
     {
         return Member::whereHas('contributions', function ($query) {
             $query->where('status', 'overdue');
-        })->with(['contributions' => function ($query) {
-            $query->where('status', 'overdue');
-        }])->get();
+        })->with([
+                    'contributions' => function ($query) {
+                        $query->where('status', 'overdue');
+                    }
+                ])->get();
     }
 
     /**
@@ -434,7 +484,7 @@ class ReportService
     {
         $disbursedLoans = $loans->where('status', 'disbursed');
         $totalDisbursed = $disbursedLoans->sum('amount');
-        $totalRepaid = $disbursedLoans->sum(fn ($l) => $l->repayments->sum('amount'));
+        $totalRepaid = $disbursedLoans->sum(fn($l) => $l->repayments->sum('amount'));
 
         return $totalDisbursed > 0 ? ($totalRepaid / $totalDisbursed) * 100 : 0;
     }
@@ -463,9 +513,9 @@ class ReportService
      */
     public function exportToArray(string $reportType, array $filters = []): array
     {
-        $method = 'generate'.ucfirst($reportType).'Report';
+        $method = 'generate' . ucfirst($reportType) . 'Report';
 
-        if (! method_exists($this, $method)) {
+        if (!method_exists($this, $method)) {
             throw new \InvalidArgumentException("Report type '{$reportType}' not supported");
         }
 
@@ -481,7 +531,7 @@ class ReportService
             'eligibility' => 'members',
         ];
 
-        $dataKey = $dataKeyMap[$reportType] ?? rtrim($reportType, 's').'s';
+        $dataKey = $dataKeyMap[$reportType] ?? rtrim($reportType, 's') . 's';
         $data = $report[$dataKey] ?? [];
 
         // Convert Collection to array if needed

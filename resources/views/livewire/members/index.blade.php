@@ -245,17 +245,32 @@ new #[Layout('components.layouts.app', ['title' => 'Members'])] class extends Co
 
                     <!-- Status Filter -->
                     <div>
-                        <flux:input wire:model.live="status" placeholder="Filter by status" />
+                        <flux:select wire:model.live="status" placeholder="Filter by status">
+                            <option value="">All Statuses</option>
+                            @foreach($this->statusOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
                     <!-- State Filter -->
                     <div>
-                        <flux:input wire:model.live="state_id" placeholder="Filter by state" />
+                        <flux:select wire:model.live="state_id" placeholder="Filter by state">
+                            <option value="">All States</option>
+                            @foreach($this->states as $state)
+                                <option value="{{ $state->id }}">{{ $state->name }}</option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
-                    <!-- LGA Filter -->
+                    <!-- LGA Filter (Cascaded from State) -->
                     <div>
-                        <flux:input wire:model.live="lga_id" placeholder="Filter by LGA" />
+                        <flux:select wire:model.live="lga_id" placeholder="Filter by LGA" :disabled="!$state_id">
+                            <option value="">{{ $state_id ? 'All LGAs' : 'Select state first' }}</option>
+                            @foreach($this->lgas as $lga)
+                                <option value="{{ $lga->id }}">{{ $lga->name }}</option>
+                            @endforeach
+                        </flux:select>
                     </div>
                 </div>
 
@@ -364,7 +379,7 @@ new #[Layout('components.layouts.app', ['title' => 'Members'])] class extends Co
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex items-center gap-2">
-                                            <flux:button variant="ghost" size="sm" href="{{ route('members.show', $member) }}" wire:navigate>
+                                            <flux:button  size="sm" href="{{ route('members.show', $member) }}" wire:navigate>
                                                 View
                                             </flux:button>
                                             

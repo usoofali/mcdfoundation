@@ -146,7 +146,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Health Claim'])] class 
                 </flux:text>
             </div>
             <div>
-                <flux:button variant="ghost" href="{{ route('health-claims.show', $claim) }}" wire:navigate>
+                <flux:button href="{{ route('health-claims.show', $claim) }}" wire:navigate>
                     Back to Claim
                 </flux:button>
             </div>
@@ -289,7 +289,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Health Claim'])] class 
 
                 <!-- Submit Button -->
                 <div class="flex justify-end gap-3">
-                    <flux:button variant="ghost" href="{{ route('health-claims.show', $claim) }}" wire:navigate>
+                    <flux:button href="{{ route('health-claims.show', $claim) }}" wire:navigate>
                         Cancel
                     </flux:button>
                     <flux:button type="submit" variant="primary"

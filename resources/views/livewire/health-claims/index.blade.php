@@ -230,7 +230,7 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
             <flux:heading size="sm" class="font-medium text-neutral-900 dark:text-white">
                 Filters
             </flux:heading>
-            <flux:button variant="ghost" size="sm" wire:click="clearFilters">
+            <flux:button size="sm" wire:click="clearFilters">
                 Clear Filters
             </flux:button>
         </div>
@@ -344,12 +344,12 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                        @if($claim->status === 'submitted') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                                        @elseif($claim->status === 'approved') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                                        @elseif($claim->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                        @elseif($claim->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
-                                                        @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                        @endif">
+                                                                @if($claim->status === 'submitted') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                                                @elseif($claim->status === 'approved') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                                                @elseif($claim->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                @elseif($claim->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                @endif">
                                         {{ $claim->status_label }}
                                     </span>
                                 </td>
@@ -358,11 +358,11 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claims'])] class exte
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <flux:button variant="ghost" size="sm" href="{{ route('health-claims.show', $claim) }}">
+                                        <flux:button size="sm" href="{{ route('health-claims.show', $claim) }}">
                                             View
                                         </flux:button>
                                         @if($claim->status === 'submitted')
-                                            <flux:button variant="ghost" size="sm" href="{{ route('health-claims.edit', $claim) }}">
+                                            <flux:button size="sm" href="{{ route('health-claims.edit', $claim) }}">
                                                 Edit
                                             </flux:button>
                                         @endif

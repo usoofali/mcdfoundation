@@ -68,22 +68,10 @@ new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class ex
 
 <x-slot name="header">
     <div class="flex items-center justify-between">
-        <h2 class="leading-tight text-xl font-semibold text-zinc-800 dark:text-zinc-200">{{ __('System Settings') }}
+        <h2 class="leading-tight text-xl font-semibold text-gray-900 dark:text-white">{{ __('System Settings') }}
         </h2>
-        <div class="flex flex-wrap items-center gap-2">
-            <flux:button variant="primary" icon="arrow-path" wire:click="resetToDefaults" variant="outline"
-                class="gap-2">
-
-                {{ __('Reset to Defaults') }}
-            </flux:button>
-            <flux:button variant="primary" icon="check" wire:click="save" primary class="gap-2">
-
-                {{ __('Save Settings') }}
-            </flux:button>
-        </div>
     </div>
 </x-slot>
-
 <div class="py-12">
     <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
         <div
@@ -143,17 +131,44 @@ new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class ex
                     <flux:heading size="md" class="mb-4 font-semibold text-neutral-900 dark:text-white">
                         {{ __('Organization Information') }}
                     </flux:heading>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <flux:input wire:model="formData.organization_info.name" label="{{ __('Organization Name') }}"
-                            placeholder="MCDF Community Fund Initiative" />
-                        <flux:input wire:model="formData.organization_info.email" type="email" label="{{ __('Email') }}"
-                            placeholder="info@mcdf.org" />
-                        <flux:input wire:model="formData.organization_info.phone" label="{{ __('Phone') }}"
-                            placeholder="+234-xxx-xxx-xxxx" />
-                        <flux:input wire:model="formData.organization_info.website" label="{{ __('Website') }}"
-                            placeholder="https://mcdf.org" />
-                        <flux:textarea wire:model="formData.organization_info.address" label="{{ __('Address') }}"
-                            placeholder="Enter organization address" rows="3" />
+                    <div class="space-y-6">
+                        <!-- Basic Info -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <flux:input wire:model="formData.organization_info.name" label="{{ __('Organization Name') }}"
+                                placeholder="MCDF Community Fund Initiative" />
+                            <flux:input wire:model="formData.organization_info.email" type="email" label="{{ __('Email') }}"
+                                placeholder="info@mcdf.org" />
+                            <flux:input wire:model="formData.organization_info.phone" label="{{ __('Phone') }}"
+                                placeholder="+234-xxx-xxx-xxxx" />
+                            <flux:input wire:model="formData.organization_info.website" label="{{ __('Website') }}"
+                                placeholder="https://mcdf.org" />
+                        </div>
+                        
+                        <div>
+                            <flux:textarea wire:model="formData.organization_info.address" label="{{ __('Address') }}"
+                                placeholder="Enter organization address" rows="3" />
+                        </div>
+
+                        <!-- Bank Account Details -->
+                        <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                            <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white">
+                                {{ __('Bank Account Details') }}
+                            </flux:heading>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <flux:input wire:model="formData.organization_info.bank_name" 
+                                    label="{{ __('Bank Name') }}"
+                                    placeholder="e.g., First Bank of Nigeria" />
+                                <flux:input wire:model="formData.organization_info.account_number" 
+                                    label="{{ __('Account Number') }}"
+                                    placeholder="e.g., 1234567890" />
+                                <flux:input wire:model="formData.organization_info.account_name" 
+                                    label="{{ __('Account Name') }}"
+                                    placeholder="e.g., MCDF Community Fund" />
+                                <flux:input wire:model="formData.organization_info.sort_code" 
+                                    label="{{ __('Sort Code / Branch Code') }}"
+                                    placeholder="e.g., 011" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -183,15 +198,93 @@ new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class ex
                     <flux:heading size="md" class="mb-4 font-semibold text-neutral-900 dark:text-white">
                         {{ __('Loan Settings') }}
                     </flux:heading>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <flux:input wire:model="formData.loan_settings.min_loan_amount" type="number"
-                            label="{{ __('Minimum Loan Amount (₦)') }}" placeholder="5000" />
-                        <flux:input wire:model="formData.loan_settings.max_loan_amount" type="number"
-                            label="{{ __('Maximum Loan Amount (₦)') }}" placeholder="100000" />
-                        <flux:input wire:model="formData.loan_settings.min_repayment_period" type="number"
-                            label="{{ __('Min Repayment Period (Months)') }}" placeholder="1" />
-                        <flux:input wire:model="formData.loan_settings.max_repayment_period" type="number"
-                            label="{{ __('Max Repayment Period (Months)') }}" placeholder="24" />
+                    
+                    <div class="space-y-6">
+                        <!-- Basic Loan Limits -->
+                        <div>
+                            <flux:text class="mb-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {{ __('Loan Limits') }}
+                            </flux:text>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <flux:input wire:model="formData.loan_settings.min_loan_amount" type="number"
+                                    label="{{ __('Minimum Loan Amount (₦)') }}" placeholder="5000" />
+                                <flux:input wire:model="formData.loan_settings.max_loan_amount" type="number"
+                                    label="{{ __('Maximum Loan Amount (₦)') }}" placeholder="100000" />
+                                <flux:input wire:model="formData.loan_settings.min_repayment_period" type="number"
+                                    label="{{ __('Min Repayment Period (Months)') }}" placeholder="1" />
+                                <flux:input wire:model="formData.loan_settings.max_repayment_period" type="number"
+                                    label="{{ __('Max Repayment Period (Months)') }}" placeholder="24" />
+                            </div>
+                        </div>
+
+                        <!-- Loan Calculator Based on Contribution -->
+                        <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                            <flux:text class="mb-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {{ __('Loan Calculator (Based on Contribution)') }}
+                            </flux:text>
+                            <flux:text class="mb-4 text-xs text-neutral-600 dark:text-neutral-400">
+                                {{ __('Configure how loan eligibility is calculated based on member contributions. Formula: Total Contributions × Multiplier = Maximum Eligible Loan') }}
+                            </flux:text>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <flux:input wire:model="formData.loan_settings.contribution_multiplier" 
+                                    type="number" step="0.1"
+                                    label="{{ __('Contribution Multiplier') }}" 
+                                    placeholder="2.0"
+                                    description="e.g., 2.0 means member can borrow 2× their total contributions" />
+                                <flux:input wire:model="formData.loan_settings.min_contributions_for_loan" 
+                                    type="number"
+                                    label="{{ __('Minimum Contributions Required') }}" 
+                                    placeholder="12"
+                                    description="Number of contributions before eligible for loan" />
+                                <flux:input wire:model="formData.loan_settings.min_contribution_amount" 
+                                    type="number"
+                                    label="{{ __('Min Total Contribution (₦)') }}" 
+                                    placeholder="10000"
+                                    description="Minimum total contribution amount required" />
+                            </div>
+                        </div>
+
+                        <!-- Interest Rates -->
+                        <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                            <flux:text class="mb-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {{ __('Interest Rates') }}
+                            </flux:text>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <flux:input wire:model="formData.loan_settings.default_interest_rate" 
+                                    type="number" step="0.01"
+                                    label="{{ __('Default Interest Rate (%)') }}" 
+                                    placeholder="5.0" />
+                                <flux:input wire:model="formData.loan_settings.cash_loan_interest_rate" 
+                                    type="number" step="0.01"
+                                    label="{{ __('Cash Loan Interest (%)') }}" 
+                                    placeholder="5.0" />
+                                <flux:input wire:model="formData.loan_settings.item_loan_interest_rate" 
+                                    type="number" step="0.01"
+                                    label="{{ __('Item Loan Interest (%)') }}" 
+                                    placeholder="7.0" />
+                                <flux:input wire:model="formData.loan_settings.late_payment_penalty_rate" 
+                                    type="number" step="0.01"
+                                    label="{{ __('Late Payment Penalty (%)') }}" 
+                                    placeholder="2.0" />
+                            </div>
+                        </div>
+
+                        <!-- Additional Settings -->
+                        <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                            <flux:text class="mb-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                {{ __('Additional Settings') }}
+                            </flux:text>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <flux:checkbox wire:model="formData.loan_settings.allow_multiple_loans"
+                                        label="{{ __('Allow Multiple Active Loans') }}" />
+                                </div>
+                                <div>
+                                    <flux:checkbox wire:model="formData.loan_settings.require_guarantor"
+                                        label="{{ __('Require Guarantor for Loans') }}" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

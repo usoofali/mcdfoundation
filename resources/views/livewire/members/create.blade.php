@@ -285,24 +285,26 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
             </div>
 
             <!-- Progress Steps -->
-            <div class="bg-white dark:bg-zinc-800 shadow rounded-lg p-6">
-                <div class="flex items-center justify-between">
+            <div class="bg-white dark:bg-zinc-800 shadow rounded-lg p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
                     @foreach([1, 2, 3] as $step)
-                        <div class="flex items-center">
-                            <div class="flex items-center justify-center w-8 h-8 rounded-full {{ $currentStep >= $step ? 'bg-indigo-600 text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300' }}">
-                                {{ $step }}
-                            </div>
-                            <div class="ml-2 text-sm font-medium {{ $currentStep >= $step ? 'text-indigo-600 dark:text-indigo-400' : 'text-neutral-500 dark:text-neutral-400' }}">
-                                @if($step === 1)
-                                    Basic Info
-                                @elseif($step === 2)
-                                    Location & Work
-                                @else
-                                    Health & Contact
-                                @endif
+                        <div class="flex items-center {{ $loop->last ? '' : 'sm:flex-1' }}">
+                            <div class="flex items-center gap-2 sm:gap-0">
+                                <div class="flex items-center justify-center w-8 h-8 flex-shrink-0 rounded-full {{ $currentStep >= $step ? 'bg-indigo-600 text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300' }}">
+                                    {{ $step }}
+                                </div>
+                                <div class="ml-2 text-sm font-medium {{ $currentStep >= $step ? 'text-indigo-600 dark:text-indigo-400' : 'text-neutral-500 dark:text-neutral-400' }}">
+                                    @if($step === 1)
+                                        Basic Info
+                                    @elseif($step === 2)
+                                        Location & Work
+                                    @else
+                                        Health & Contact
+                                    @endif
+                                </div>
                             </div>
                             @if($step < 3)
-                                <div class="w-16 h-0.5 mx-4 {{ $currentStep > $step ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700' }}"></div>
+                                <div class="hidden sm:block sm:w-full sm:h-0.5 sm:mx-4 {{ $currentStep > $step ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700' }}"></div>
                             @endif
                         </div>
                     @endforeach

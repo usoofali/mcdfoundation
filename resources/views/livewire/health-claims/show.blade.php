@@ -119,7 +119,7 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                 </flux:text>
             </div>
             <div class="flex gap-2">
-                <flux:button variant="ghost" href="{{ route('health-claims.index') }}" wire:navigate>
+                <flux:button href="{{ route('health-claims.index') }}" wire:navigate>
                     Back to Claims
                 </flux:button>
                 @if($claim->status === 'submitted')
@@ -262,7 +262,7 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                             </flux:button>
                         @endcan
                         @can('delete', $claim)
-                            <flux:button variant="ghost" class="w-full" wire:click="deleteClaim"
+                            <flux:button class="w-full" wire:click="deleteClaim"
                                 wire:confirm="Are you sure you want to delete this claim?">
                                 Delete Claim
                             </flux:button>
@@ -314,9 +314,9 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                         <div class="flex gap-3">
                             <div class="flex flex-col items-center">
                                 <div class="flex h-8 w-8 items-center justify-center rounded-full 
-                                                        @if($claim->status === 'rejected') bg-red-100 dark:bg-red-900/20
-                                                        @else bg-green-100 dark:bg-green-900/20
-                                                        @endif">
+                                                            @if($claim->status === 'rejected') bg-red-100 dark:bg-red-900/20
+                                                            @else bg-green-100 dark:bg-green-900/20
+                                                            @endif">
                                     <flux:icon name="@if($claim->status === 'rejected') x-mark @else check @endif"
                                         class="size-4 @if($claim->status === 'rejected') text-red-600 dark:text-red-400 @else text-green-600 dark:text-green-400 @endif" />
                                 </div>
@@ -392,7 +392,8 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                                     <flux:icon name="document" class="size-4 text-neutral-500 flex-shrink-0" />
                                     <div class="min-w-0">
                                         <p class="text-sm font-medium text-neutral-900 dark:text-white truncate">
-                                            {{ $document->file_name }}</p>
+                                            {{ $document->file_name }}
+                                        </p>
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400">
                                             {{ $document->document_type_label }} • {{ $document->file_size_human }}
                                         </p>
@@ -449,7 +450,7 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                 </div>
 
                 <div class="flex justify-end gap-2">
-                    <flux:button variant="ghost" wire:click="$set('showApproveModal', false)">Cancel</flux:button>
+                    <flux:button wire:click="$set('showApproveModal', false)">Cancel</flux:button>
                     <flux:button type="submit" variant="primary">Approve</flux:button>
                 </div>
             </div>
@@ -471,7 +472,7 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                 </div>
 
                 <div class="flex justify-end gap-2">
-                    <flux:button variant="ghost" wire:click="$set('showRejectModal', false)">Cancel</flux:button>
+                    <flux:button wire:click="$set('showRejectModal', false)">Cancel</flux:button>
                     <flux:button type="submit" variant="danger">Reject</flux:button>
                 </div>
             </div>
@@ -493,7 +494,7 @@ new #[Layout('components.layouts.app', ['title' => 'Health Claim Details'])] cla
                 </div>
 
                 <div class="flex justify-end gap-2">
-                    <flux:button variant="ghost" wire:click="$set('showPayModal', false)">Cancel</flux:button>
+                    <flux:button wire:click="$set('showPayModal', false)">Cancel</flux:button>
                     <flux:button type="submit" variant="primary">Process Payment</flux:button>
                 </div>
             </div>

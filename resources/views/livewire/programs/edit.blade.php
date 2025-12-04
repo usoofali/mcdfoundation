@@ -84,7 +84,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
                 </flux:text>
             </div>
             <div>
-                <flux:button variant="ghost" href="{{ route('programs.show', $program) }}" wire:navigate>
+                <flux:button href="{{ route('programs.show', $program) }}" wire:navigate>
                     Back to Program
                 </flux:button>
             </div>
@@ -109,14 +109,15 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
 
     <!-- Form (same as create) -->
     <form wire:submit="update">
-        <div class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+        <div
+            class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
             <div class="space-y-6">
                 <!-- Basic Information -->
                 <div>
                     <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white">
                         Basic Information
                     </flux:heading>
-                    
+
                     <div class="space-y-4">
                         <div>
                             <flux:input wire:model="name" label="Program Name" required />
@@ -141,7 +142,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
                         </div>
 
                         <div>
-                            <flux:input wire:model="capacity" type="number" min="1" label="Capacity" 
+                            <flux:input wire:model="capacity" type="number" min="1" label="Capacity"
                                 placeholder="Leave empty for unlimited" />
                             <flux:text class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                                 Maximum number of members that can enroll
@@ -163,20 +164,20 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
 
                     <div class="space-y-4">
                         <div>
-                            <flux:input wire:model="min_contributions" type="number" min="0" 
+                            <flux:input wire:model="min_contributions" type="number" min="0"
                                 label="Minimum Contributions Required" required />
                             @error('min_contributions') <flux:error>{{ $message }}</flux:error> @enderror
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <flux:input wire:model="min_age" type="number" min="1" max="150" 
-                                    label="Minimum Age" placeholder="Optional" />
+                                <flux:input wire:model="min_age" type="number" min="1" max="150" label="Minimum Age"
+                                    placeholder="Optional" />
                                 @error('min_age') <flux:error>{{ $message }}</flux:error> @enderror
                             </div>
                             <div>
-                                <flux:input wire:model="max_age" type="number" min="1" max="150" 
-                                    label="Maximum Age" placeholder="Optional" />
+                                <flux:input wire:model="max_age" type="number" min="1" max="150" label="Maximum Age"
+                                    placeholder="Optional" />
                                 @error('max_age') <flux:error>{{ $message }}</flux:error> @enderror
                             </div>
                         </div>
@@ -185,7 +186,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
 
                 <!-- Actions -->
                 <div class="flex justify-end gap-3 border-t border-neutral-200 dark:border-neutral-700 pt-6">
-                    <flux:button variant="ghost" href="{{ route('programs.show', $program) }}" wire:navigate>
+                    <flux:button href="{{ route('programs.show', $program) }}" wire:navigate>
                         Cancel
                     </flux:button>
                     <flux:button type="submit" variant="primary">
