@@ -103,56 +103,90 @@ new #[Layout('components.layouts.app', ['title' => 'Overdue Contributions'])] cl
         </div>
 
         <div class="overflow-x-auto">
-            <flux:table>
-                <flux:columns>
-                    <flux:column>Member</flux:column>
-                    <flux:column>Contact</flux:column>
-                    <flux:column>Plan</flux:column>
-                    <flux:column>Due Date</flux:column>
-                    <flux:column>Days Overdue</flux:column>
-                    <flux:column>Amount</flux:column>
-                    <flux:column>Fine</flux:column>
-                    <flux:column>Total</flux:column>
-                    <flux:column>Actions</flux:column>
-                </flux:columns>
-
-                <flux:rows>
+            <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+                <thead class="bg-neutral-50 dark:bg-neutral-900">
+                    <tr>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Member</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Contact</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Plan</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Due Date</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Days Overdue</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Amount</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Fine</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Total</th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
                     @forelse($overdueContributions as $expected)
-                        <flux:row>
-                            <flux:cell>
-                                <div class="font-medium">{{ $expected->member->full_name }}</div>
-                                <div class="text-xs text-neutral-500">{{ $expected->member->registration_no }}</div>
-                            </flux:cell>
-                            <flux:cell>
-                                <div class="text-sm">📱 {{ $expected->member->phone }}</div>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-medium text-neutral-900 dark:text-white">{{ $expected->member->full_name }}
+                                </div>
+                                <div class="text-xs text-neutral-500 dark:text-neutral-400">
+                                    {{ $expected->member->registration_no }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-neutral-900 dark:text-white">📱 {{ $expected->member->phone }}
+                                </div>
                                 @if($expected->member->email)
-                                    <div class="text-xs text-neutral-500">📧 {{ $expected->member->email }}</div>
+                                    <div class="text-xs text-neutral-500 dark:text-neutral-400">📧
+                                        {{ $expected->member->email }}</div>
                                 @endif
-                            </flux:cell>
-                            <flux:cell>{{ $expected->contributionPlan->label }}</flux:cell>
-                            <flux:cell>{{ $expected->due_date->format('M d, Y') }}</flux:cell>
-                            <flux:cell class="text-red-600 font-semibold">{{ $expected->days_overdue }} days</flux:cell>
-                            <flux:cell>₦{{ number_format($expected->expected_amount, 2) }}</flux:cell>
-                            <flux:cell class="text-red-600 font-semibold">₦{{ number_format($expected->fine_amount, 2) }}
-                            </flux:cell>
-                            <flux:cell class="font-bold">₦{{ number_format($expected->total_amount, 2) }}</flux:cell>
-                            <flux:cell>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                {{ $expected->contributionPlan->label }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                {{ $expected->due_date->format('M d, Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
+                                {{ $expected->days_overdue }} days
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                ₦{{ number_format($expected->expected_amount, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
+                                ₦{{ number_format($expected->fine_amount, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-neutral-900 dark:text-white">
+                                ₦{{ number_format($expected->total_amount, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex gap-2">
                                     <flux:button size="sm" href="{{ route('admin.members.show', $expected->member) }}">
                                         View
                                     </flux:button>
                                 </div>
-                            </flux:cell>
-                        </flux:row>
+                            </td>
+                        </tr>
                     @empty
-                        <flux:row>
-                            <flux:cell colspan="9" class="text-center text-neutral-500">
+                        <tr>
+                            <td colspan="9" class="px-6 py-12 text-center text-neutral-500 dark:text-neutral-400">
                                 No overdue contributions found
-                            </flux:cell>
-                        </flux:row>
+                            </td>
+                        </tr>
                     @endforelse
-                </flux:rows>
-            </flux:table>
+                </tbody>
+            </table>
         </div>
 
         <div class="border-t border-neutral-200 p-4 dark:border-neutral-700">

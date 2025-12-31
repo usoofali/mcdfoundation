@@ -24,10 +24,10 @@ new #[Layout('components.layouts.app', ['title' => 'Contribution Details'])] cla
                             {{ $contribution->receipt_number }}</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                        <flux:button variant="outline" href="{{ route('contributions.index') }}"
+                        <!-- <flux:button variant="outline" href="{{ route('contributions.index') }}"
                             class="w-full sm:w-auto">
                             Back to List
-                        </flux:button>
+                        </flux:button> -->
                         <flux:button variant="outline" icon="document-arrow-down"
                             href="{{ route('contributions.receipt.download', $contribution) }}"
                             class="w-full sm:w-auto">
