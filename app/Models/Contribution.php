@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property \Carbon\Carbon $payment_date
+ * @property \Carbon\Carbon|null $verified_at
+ */
 class Contribution extends Model
 {
     use Auditable, HasFactory, SoftDeletes;
@@ -19,8 +23,6 @@ class Contribution extends Model
         'payment_method',
         'payment_reference',
         'payment_date',
-        'period_start',
-        'period_end',
         'status',
         'collected_by',
         'fine_amount',
@@ -37,8 +39,6 @@ class Contribution extends Model
         'amount' => 'decimal:2',
         'fine_amount' => 'decimal:2',
         'payment_date' => 'date',
-        'period_start' => 'date',
-        'period_end' => 'date',
         'verified_at' => 'datetime',
     ];
 
@@ -75,19 +75,19 @@ class Contribution extends Model
     }
 
     /**
+     * Get the expected contributions linked to this payment.
+     */
+    public function expectedContributions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ExpectedContribution::class, 'actual_contribution_id');
+    }
+
+    /**
      * Get the user who verified the contribution.
      */
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
-    }
-
-    /**
-     * Check if the contribution is late.
-     */
-    public function getIsLateAttribute(): bool
-    {
-        return $this->payment_date > $this->period_end;
     }
 
     /**
@@ -110,6 +110,27 @@ class Contribution extends Model
             'mobile_money' => 'Mobile Money',
             default => ucfirst($this->payment_method),
         };
+    }
+
+    /**
+     * Get the period coverage string (e.g., "01 Jan, 2024 - 31 Jan, 2024")
+     */
+    public function getPeriodCoverageAttribute(): string
+    {
+        $expected = $this->expectedContributions;
+
+        if ($expected->isEmpty()) {
+            return '-';
+        }
+
+        $minStart = $expected->min('period_start');
+        $maxEnd = $expected->max('period_end');
+
+        if (!$minStart || !$maxEnd) {
+            return '-';
+        }
+
+        return $minStart->format('d M, Y') . ' - ' . $maxEnd->format('d M, Y');
     }
 
     /**
@@ -181,21 +202,6 @@ class Contribution extends Model
     }
 
     /**
-     * Scope for contributions by period.
-     */
-    public function scopeByPeriod($query, $startDate, $endDate)
-    {
-        return $query->where(function ($q) use ($startDate, $endDate) {
-            $q->whereBetween('period_start', [$startDate, $endDate])
-                ->orWhereBetween('period_end', [$startDate, $endDate])
-                ->orWhere(function ($q2) use ($startDate, $endDate) {
-                    $q2->where('period_start', '<=', $startDate)
-                        ->where('period_end', '>=', $endDate);
-                });
-        });
-    }
-
-    /**
      * Scope for contributions with fines.
      */
     public function scopeWithFines($query)
@@ -209,8 +215,7 @@ class Contribution extends Model
     public function scopePendingVerification($query)
     {
         return $query->where('status', 'pending')
-            ->whereNotNull('receipt_path')
-            ->whereNotNull('uploaded_by');
+            ->whereNotNull('receipt_path');
     }
 
     /**
@@ -242,22 +247,6 @@ class Contribution extends Model
     }
 
     /**
-     * Calculate late fine based on system settings.
-     */
-    public function calculateLateFine(): float
-    {
-        if ($this->is_late && $this->status !== 'paid') {
-            $settingService = app(\App\Services\SettingService::class);
-            $fineSettings = $settingService->getFineSettings();
-            $finePercent = $fineSettings['late_payment_fine_percent'] ?? 50;
-
-            return $this->amount * ($finePercent / 100);
-        }
-
-        return 0;
-    }
-
-    /**
      * Generate unique receipt number.
      */
     public static function generateReceiptNumber(): string
@@ -282,7 +271,7 @@ class Contribution extends Model
     }
 
     /**
-     * Boot method to auto-generate receipt number and calculate fine.
+     * Boot method to auto-generate receipt number.
      */
     protected static function boot()
     {
@@ -291,18 +280,6 @@ class Contribution extends Model
         static::creating(function ($contribution) {
             if (empty($contribution->receipt_number)) {
                 $contribution->receipt_number = static::generateReceiptNumber();
-            }
-
-            // Calculate fine if overdue
-            if ($contribution->payment_date > $contribution->period_end) {
-                $contribution->fine_amount = $contribution->calculateLateFine();
-            }
-        });
-
-        static::updating(function ($contribution) {
-            // Recalculate fine if payment date or period end changed
-            if ($contribution->isDirty(['payment_date', 'period_end'])) {
-                $contribution->fine_amount = $contribution->calculateLateFine();
             }
         });
     }

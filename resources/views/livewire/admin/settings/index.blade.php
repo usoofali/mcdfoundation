@@ -24,6 +24,7 @@ new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class ex
             'organization_info' => $this->settings['organization_info']['value'] ?? [],
             'system_config' => $this->settings['system_config']['value'] ?? [],
             'health_coverage' => $this->settings['health_coverage']['value'] ?? [],
+            'health_eligibility' => $this->settings['health_eligibility']['value'] ?? [],
             'loan_settings' => $this->settings['loan_settings']['value'] ?? [],
             'program_settings' => $this->settings['program_settings']['value'] ?? [],
             'cashout_settings' => $this->settings['cashout_settings']['value'] ?? [],
@@ -39,6 +40,7 @@ new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class ex
             'formData.organization_info' => ['array'],
             'formData.system_config' => ['array'],
             'formData.health_coverage' => ['array'],
+            'formData.health_eligibility' => ['array'],
             'formData.loan_settings' => ['array'],
             'formData.program_settings' => ['array'],
             'formData.cashout_settings' => ['array'],
@@ -192,6 +194,31 @@ new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class ex
                     </div>
                 </div>
 
+                <!-- Health Eligibility Settings -->
+                <div
+                    class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+                    <flux:heading size="md" class="mb-4 font-semibold text-neutral-900 dark:text-white">
+                        {{ __('Health Eligibility Settings') }}
+                    </flux:heading>
+                    <flux:text class="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+                        Configure minimum contribution requirements for health claim eligibility
+                    </flux:text>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <flux:input wire:model="formData.health_eligibility.min_contributions_outpatient" type="number"
+                            label="{{ __('Outpatient Min Contributions') }}" placeholder="1" 
+                            description="Minimum paid contributions for outpatient claims" />
+                        <flux:input wire:model="formData.health_eligibility.min_contributions_inpatient" type="number"
+                            label="{{ __('Inpatient Min Contributions') }}" placeholder="5"
+                            description="Minimum paid contributions for inpatient claims" />
+                        <flux:input wire:model="formData.health_eligibility.min_contributions_surgery" type="number"
+                            label="{{ __('Surgery Min Contributions') }}" placeholder="5"
+                            description="Minimum paid contributions for surgery claims" />
+                        <flux:input wire:model="formData.health_eligibility.min_contributions_maternity" type="number"
+                            label="{{ __('Maternity Min Contributions') }}" placeholder="5"
+                            description="Minimum paid contributions for maternity claims" />
+                    </div>
+                </div>
+
                 <!-- Loan Settings -->
                 <div
                     class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
@@ -282,6 +309,11 @@ new #[Layout('components.layouts.app', ['title' => 'System Settings'])] class ex
                                 <div>
                                     <flux:checkbox wire:model="formData.loan_settings.require_guarantor"
                                         label="{{ __('Require Guarantor for Loans') }}" />
+                                </div>
+                                <div class="col-span-1 md:col-span-2">
+                                    <flux:input wire:model="formData.max_dependents_per_member" type="number"
+                                        label="{{ __('Maximum Dependents Per Member') }}" placeholder="6"
+                                        description="Limit the number of dependents a member can register" />
                                 </div>
                             </div>
                         </div>

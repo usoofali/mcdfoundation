@@ -5,43 +5,44 @@ use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 })->name('home');
 
-// Member Self-Service Routes
-Route::prefix('my')->name('my.')->middleware(['auth', 'member'])->group(function () {
-    // Dashboard & Profile
-    Volt::route('/', 'members.my-dashboard')->name('dashboard');
-    Volt::route('/profile', 'members.my-profile')->name('profile');
-    Volt::route('/dependents', 'dependents.my-dependents')->name('dependents');
+Route::middleware(['auth', 'profile-completion'])->group(function () {
+    // General Dashboard
+    Volt::route('dashboard', 'dashboard.index')->name('dashboard');
 
-    // Contributions
-    Volt::route('/contributions', 'contributions.my-contributions')->name('contributions');
-    Volt::route('/contributions/submit', 'contributions.member-submit')->name('contributions.submit');
+    // Member Self-Service Routes
+    Route::prefix('my')->name('my.')->middleware(['member'])->group(function () {
+        // Dashboard & Profile
+        Volt::route('/', 'members.my-dashboard')->name('dashboard');
+        Volt::route('/profile', 'members.my-profile')->name('profile');
+        Volt::route('/dependents', 'dependents.my-dependents')->name('dependents');
 
-    // Loans
-    Volt::route('/loans', 'loans.my-loans')->name('loans');
-    Volt::route('/loans/apply', 'loans.my-apply')->name('loans.apply');
-    Volt::route('/loans/{loan}', 'loans.show')->name('loans.show');
+        // Contributions
+        Volt::route('/contributions', 'contributions.my-contributions')->name('contributions');
+        Volt::route('/contributions/submit', 'contributions.member-submit')->name('contributions.submit');
 
-    // Health Claims
-    Volt::route('/claims', 'health-claims.my-claims')->name('claims');
-    Volt::route('/claims/submit', 'health-claims.my-submit')->name('claims.submit');
-    Volt::route('/claims/{claim}', 'health-claims.show')->name('claims.show');
+        // Loans
+        Volt::route('/loans', 'loans.my-loans')->name('loans');
+        Volt::route('/loans/apply', 'loans.my-apply')->name('loans.apply');
+        Volt::route('/loans/{loan}', 'loans.show')->name('loans.show');
 
-    // Programs
-    Volt::route('/programs', 'programs.my-programs')->name('programs');
-    Volt::route('/programs/browse', 'programs.index')->name('programs.browse');
-    Volt::route('/programs/{program}/enroll', 'programs.my-enroll')->name('programs.enroll');
+        // Health Claims
+        Volt::route('/claims', 'health-claims.my-claims')->name('claims');
+        Volt::route('/claims/submit', 'health-claims.my-submit')->name('claims.submit');
+        Volt::route('/claims/{claim}', 'health-claims.show')->name('claims.show');
 
-    // Cashout
-    Volt::route('/cashout', 'cashout-request.index')->name('cashout');
-    Volt::route('/cashout/request', 'cashout-request.create')->name('cashout.request');
-});
+        // Programs
+        Volt::route('/programs', 'programs.my-programs')->name('programs');
+        Volt::route('/programs/browse', 'programs.index')->name('programs.browse');
+        Volt::route('/programs/{program}/enroll', 'programs.my-enroll')->name('programs.enroll');
 
-Volt::route('dashboard', 'dashboard.index')->name('dashboard');
+        // Cashout
+        Volt::route('/cashout', 'cashout-request.index')->name('cashout');
+        Volt::route('/cashout/request', 'cashout-request.create')->name('cashout.request');
+    });
 
-Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');

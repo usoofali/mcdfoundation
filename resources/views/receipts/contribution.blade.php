@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -251,6 +252,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="watermark">OFFICIAL RECEIPT</div>
 
@@ -296,10 +298,10 @@
                 <div class="receipt-info-value">{{ $contribution->payment_date->format('F d, Y') }}</div>
             </div>
             @if($contribution->payment_reference)
-            <div class="receipt-info-item">
-                <div class="receipt-info-label">Reference</div>
-                <div class="receipt-info-value">{{ $contribution->payment_reference }}</div>
-            </div>
+                <div class="receipt-info-item">
+                    <div class="receipt-info-label">Reference</div>
+                    <div class="receipt-info-value">{{ $contribution->payment_reference }}</div>
+                </div>
             @endif
         </div>
 
@@ -309,23 +311,25 @@
             <div class="info-grid">
                 <div class="info-item">
                     <div class="info-label">Full Name</div>
-                    <div class="info-value">{{ $contribution->member->full_name }} {{ $contribution->member->family_name }}</div>
+                    <div class="info-value">{{ $contribution->member->full_name }}
+                        {{ $contribution->member->family_name }}
+                    </div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Registration Number</div>
                     <div class="info-value">{{ $contribution->member->registration_no }}</div>
                 </div>
                 @if($contribution->member->phone)
-                <div class="info-item">
-                    <div class="info-label">Phone</div>
-                    <div class="info-value">{{ $contribution->member->phone }}</div>
-                </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">{{ $contribution->member->phone }}</div>
+                    </div>
                 @endif
                 @if($contribution->member->address)
-                <div class="info-item">
-                    <div class="info-label">Address</div>
-                    <div class="info-value">{{ $contribution->member->address }}</div>
-                </div>
+                    <div class="info-item">
+                        <div class="info-label">Address</div>
+                        <div class="info-value">{{ $contribution->member->address }}</div>
+                    </div>
                 @endif
             </div>
         </div>
@@ -344,32 +348,32 @@
                     <tr>
                         <td>
                             <strong>{{ $contribution->contributionPlan?->label ?? 'Contribution' }}</strong><br>
-                            <small>Period: {{ $contribution->period_start->format('M d, Y') }} - {{ $contribution->period_end->format('M d, Y') }}</small>
+                            <small>Payment Date: {{ $contribution->payment_date->format('d M, Y') }}</small>
                         </td>
                         <td class="text-right">{{ number_format($contribution->amount, 2) }}</td>
                     </tr>
                     @if($contribution->fine_amount > 0)
-                    <tr>
-                        <td>
-                            <strong>Late Payment Fine</strong><br>
-                            <small>Payment received {{ $contribution->payment_date->diffInDays($contribution->period_end) }} days after due date</small>
-                        </td>
-                        <td class="text-right">{{ number_format($contribution->fine_amount, 2) }}</td>
-                    </tr>
+                        <tr>
+                            <td>
+                                <strong>Late Payment Fine</strong><br>
+                                <small>Fine for late contribution payment</small>
+                            </td>
+                            <td class="text-right">{{ number_format($contribution->fine_amount, 2) }}</td>
+                        </tr>
                     @endif
                 </tbody>
             </table>
 
             <div class="totals">
                 @if($contribution->fine_amount > 0)
-                <div class="total-row">
-                    <span class="total-label">Subtotal:</span>
-                    <span class="total-value">NGN {{ number_format($contribution->amount, 2) }}</span>
-                </div>
-                <div class="total-row">
-                    <span class="total-label">Late Fine:</span>
-                    <span class="total-value">NGN {{ number_format($contribution->fine_amount, 2) }}</span>
-                </div>
+                    <div class="total-row">
+                        <span class="total-label">Subtotal:</span>
+                        <span class="total-value">NGN {{ number_format($contribution->amount, 2) }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-label">Late Fine:</span>
+                        <span class="total-value">NGN {{ number_format($contribution->fine_amount, 2) }}</span>
+                    </div>
                 @endif
                 <div class="total-row final">
                     <span class="total-label">Total Amount Paid:</span>
@@ -391,28 +395,28 @@
                     <div class="info-value">{{ $contribution->payment_date->format('F d, Y') }}</div>
                 </div>
                 @if($contribution->payment_reference)
-                <div class="info-item">
-                    <div class="info-label">Payment Reference</div>
-                    <div class="info-value">{{ $contribution->payment_reference }}</div>
-                </div>
+                    <div class="info-item">
+                        <div class="info-label">Payment Reference</div>
+                        <div class="info-value">{{ $contribution->payment_reference }}</div>
+                    </div>
                 @endif
                 @if($contribution->collector)
-                <div class="info-item">
-                    <div class="info-label">Collected By</div>
-                    <div class="info-value">{{ $contribution->collector->name }}</div>
-                </div>
+                    <div class="info-item">
+                        <div class="info-label">Collected By</div>
+                        <div class="info-value">{{ $contribution->collector?->name }}</div>
+                    </div>
                 @endif
             </div>
         </div>
 
         <!-- Notes -->
         @if($contribution->notes)
-        <div class="section">
-            <div class="section-title">Notes</div>
-            <div style="padding: 10px; background: #f9f9f9; border-left: 3px solid #000;">
-                {{ $contribution->notes }}
+            <div class="section">
+                <div class="section-title">Notes</div>
+                <div style="padding: 10px; background: #f9f9f9; border-left: 3px solid #000;">
+                    {{ $contribution->notes }}
+                </div>
             </div>
-        </div>
         @endif
 
         <!-- Signature Section -->
@@ -432,5 +436,5 @@
         </div>
     </div>
 </body>
-</html>
 
+</html>

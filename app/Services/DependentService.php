@@ -8,9 +8,46 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class DependentService
 {
+    protected SettingService $settingService;
+
+    public function __construct(SettingService $settingService)
+    {
+        $this->settingService = $settingService;
+    }
+
+    /**
+     * Get the maximum number of dependents allowed per member.
+     */
+    public function getMaxDependentsPerMember(): int
+    {
+        return (int) $this->settingService->get('max_dependents_per_member', 6);
+    }
+
+    /**
+     * Check if a member can add more dependents.
+     */
+    public function canAddMoreDependents(Member $member): bool
+    {
+        $currentCount = $member->dependents()->count();
+        $maxAllowed = $this->getMaxDependentsPerMember();
+
+        return $currentCount < $maxAllowed;
+    }
+
+    /**
+     * Get remaining dependent slots for a member.
+     */
+    public function getRemainingSlots(Member $member): int
+    {
+        $currentCount = $member->dependents()->count();
+        $maxAllowed = $this->getMaxDependentsPerMember();
+
+        return max(0, $maxAllowed - $currentCount);
+    }
     /**
      * Get all dependents for a specific member.
      */
@@ -35,6 +72,14 @@ class DependentService
      */
     public function createDependent(Member $member, array $data): Dependent
     {
+        // Check if member can add more dependents
+        if (!$this->canAddMoreDependents($member)) {
+            $maxAllowed = $this->getMaxDependentsPerMember();
+            throw ValidationException::withMessages([
+                'dependent' => ["You have reached the maximum limit of {$maxAllowed} dependents. Please contact support if you need to add more."],
+            ]);
+        }
+
         $data['member_id'] = $member->id;
 
         // Handle document upload if provided

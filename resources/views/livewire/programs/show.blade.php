@@ -14,7 +14,50 @@ new #[Layout('components.layouts.app', ['title' => 'Program Details'])] class ex
     public function mount(Program $program): void
     {
         $this->authorize('view', $program);
-        $this->program = $program;
+        $this->program = $program->load('enrollments', 'state', 'lga');
+    }
+
+    public function getIsEnrolledProperty()
+    {
+        $member = auth()->user()->member;
+        if (!$member) {
+            return false;
+        }
+
+        return $this->program->enrollments()
+            ->where('member_id', $member->id)
+            ->exists();
+    }
+
+    public function getCanEnrollProperty()
+    {
+        // Check if user is a member
+        $member = auth()->user()->member;
+        if (!$member) {
+            return false;
+        }
+
+        // Check if already enrolled
+        if ($this->isEnrolled) {
+            return false;
+        }
+
+        // Check if program is active
+        if (!$this->program->is_active) {
+            return false;
+        }
+
+        // Check if program is completed (end date passed)
+        if ($this->program->end_date && $this->program->end_date->isPast()) {
+            return false;
+        }
+
+        // Check capacity
+        if ($this->program->capacity && $this->program->enrollments()->count() >= $this->program->capacity) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getStatsProperty()
@@ -51,6 +94,33 @@ new #[Layout('components.layouts.app', ['title' => 'Program Details'])] class ex
                 <flux:button href="{{ route('programs.index') }}" wire:navigate>
                     Back to Programs
                 </flux:button>
+
+                @if(auth()->user()->member)
+                    @if($this->isEnrolled)
+                        <flux:button variant="outline" disabled>
+                            <flux:icon name="check-circle" class="size-4" />
+                            Already Enrolled
+                        </flux:button>
+                    @elseif($this->canEnroll)
+                        <flux:button variant="primary" icon="academic-cap" :href="route('my.programs.enroll', $program)"
+                            wire:navigate>
+                            Enroll Now
+                        </flux:button>
+                    @elseif(!$program->is_active)
+                        <flux:button variant="outline" disabled>
+                            Program Inactive
+                        </flux:button>
+                    @elseif($program->end_date && $program->end_date->isPast())
+                        <flux:button variant="outline" disabled>
+                            Program Completed
+                        </flux:button>
+                    @elseif($program->capacity && $program->enrollments()->count() >= $program->capacity)
+                        <flux:button variant="outline" disabled>
+                            No Slots Available
+                        </flux:button>
+                    @endif
+                @endif
+
                 @can('update', $program)
                     <flux:button variant="primary" href="{{ route('programs.edit', $program) }}" wire:navigate>
                         Edit Program
@@ -91,6 +161,24 @@ new #[Layout('components.layouts.app', ['title' => 'Program Details'])] class ex
                         <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">End Date</flux:text>
                         <div class="mt-1 text-sm text-neutral-900 dark:text-white">
                             {{ $program->end_date?->format('M d, Y') ?? 'TBD' }}
+                        </div>
+                    </div>
+                    <div>
+                        <flux:text class="text-xs text-neutral-500 dark:text-neutral-400">Target Location</flux:text>
+                        <div class="mt-1 text-sm text-neutral-900 dark:text-white">
+                            @if(!$program->state_id)
+                                <span class="inline-flex items-center gap-1">
+                                    🌍 National (All States)
+                                </span>
+                            @elseif(!$program->lga_id)
+                                <span class="inline-flex items-center gap-1">
+                                    📍 {{ $program->state->name }} (State-wide)
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1">
+                                    📌 {{ $program->lga->name }}, {{ $program->state->name }}
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -176,10 +264,10 @@ new #[Layout('components.layouts.app', ['title' => 'Program Details'])] class ex
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                                        @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
-                                                                        @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                                                        @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
-                                                                        @endif">
+                                                                                                @if($enrollment->status === 'enrolled') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                                                                                @elseif($enrollment->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                                                                @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
+                                                                                                @endif">
                                                 {{ ucfirst($enrollment->status) }}
                                             </span>
                                         </td>

@@ -12,7 +12,9 @@ class ProgramPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('view_programs');
+        // Allow all authenticated users to browse programs
+        // Members can view to enroll, staff can view to manage
+        return true;
     }
 
     /**
@@ -20,7 +22,8 @@ class ProgramPolicy
      */
     public function view(User $user, Program $program): bool
     {
-        return $user->hasPermission('view_programs');
+        // Allow all authenticated users to view program details
+        return true;
     }
 
     /**

@@ -153,11 +153,13 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Health Claim'])] clas
                     @endif
                     <div
                         class="text-sm {{ $eligibility['eligible'] ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200' }}">
-                        <p class="font-medium">{{ $eligibility['message'] }}</p>
-                        @if(!empty($eligibility['details']))
+                        @if(!$eligibility['eligible'])
+                            <p class="font-medium">Message</p>
+                        @endif
+                        @if(!empty($eligibility['issues']))
                             <ul class="mt-1 list-disc list-inside space-y-1">
-                                @foreach($eligibility['details'] as $detail)
-                                    <li>{{ $detail }}</li>
+                                @foreach($eligibility['issues'] as $issue)
+                                    <li>{{ $issue }}</li>
                                 @endforeach
                             </ul>
                         @endif
@@ -249,8 +251,7 @@ new #[Layout('components.layouts.app', ['title' => 'Submit Health Claim'])] clas
                 <!-- Documents -->
                 <div>
                     <flux:label>{{ __('Supporting Documents (Optional)') }}</flux:label>
-                    <input type="file" wire:model="documents" multiple accept=".pdf,.jpg,.jpeg,.png"
-                        class="mt-1 block w-full text-sm text-gray-900 dark:text-white border border-neutral-300 dark:border-neutral-600 rounded-lg cursor-pointer bg-neutral-50 dark:bg-neutral-900 focus:outline-none" />
+                    <flux:input type="file" wire:model="documents" multiple accept=".pdf,.jpg,.jpeg,.png" />
                     <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                         {{ __('Upload receipts, prescriptions, or medical reports (PDF, JPG, PNG - Max 5MB each)') }}
                     </p>

@@ -2,6 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\ContributionPlan;
+use App\Models\ExpectedContribution;
+use App\Models\HealthcareProvider;
+use App\Models\Lga;
+use App\Models\State;
+use App\Models\User;
+use App\Services\ExpectedContributionService;
 use App\Traits\Auditable;
 use App\Traits\HasLocationScope;
 use Carbon\Carbon;
@@ -11,6 +18,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property \Carbon\Carbon $date_of_birth
+ * @property \Carbon\Carbon $registration_date
+ * @property \Carbon\Carbon|null $eligibility_start_date
+ * @property \Carbon\Carbon|null $last_cashout_date
+ * @property int $contribution_plan_id
+ */
 class Member extends Model
 {
     use Auditable, HasFactory, HasLocationScope, SoftDeletes;
@@ -126,6 +140,11 @@ class Member extends Model
         return $this->hasMany(CashoutRequest::class);
     }
 
+    public function expectedContributions(): HasMany
+    {
+        return $this->hasMany(ExpectedContribution::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {
@@ -176,7 +195,7 @@ class Member extends Model
         $lastMember = static::orderBy('id', 'desc')->first();
         $nextNumber = $lastMember ? (int) substr($lastMember->registration_no, 5) + 1 : 1;
 
-        return 'MCDF/' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return 'MCDF/' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
     public function calculateEligibilityStartDate(): ?Carbon
@@ -226,6 +245,12 @@ class Member extends Model
     {
         $this->update(['status' => 'active']);
         $this->updateEligibilityStatus();
+
+        // Auto-generate expected contributions
+        if ($this->contribution_plan_id) {
+            $service = app(ExpectedContributionService::class);
+            $service->ensureFutureContributions($this);
+        }
     }
 
     public function suspend(): void
@@ -238,28 +263,45 @@ class Member extends Model
         $this->update(['status' => 'active']);
     }
 
+    public function requestReactivation(): void
+    {
+        if ($this->status !== 'suspended') {
+            throw new \Exception('Only suspended accounts can request reactivation');
+        }
+
+        $this->update(['status' => 'pending']);
+
+        \Log::info("Member {$this->id} requested reactivation after cashout");
+    }
+
     /**
      * Check eligibility for specific claim type.
      */
     public function checkHealthEligibility(string $claimType = 'outpatient'): array
     {
         $issues = [];
+        $settingService = app(\App\Services\SettingService::class);
 
         // Check if member is active
         if ($this->status !== 'active') {
             $issues[] = 'Member must be active';
         }
 
-        // Check registration period (60 days minimum)
+        // Check registration period - USE SETTINGS
+        $eligibilityRules = $settingService->get('eligibility_rules', []);
+        $minDays = $eligibilityRules['health_access_wait_days'] ?? 60;
+
         $registrationDate = $this->registration_date ?? $this->created_at;
         $daysSinceRegistration = $registrationDate->diffInDays(now());
 
-        if ($daysSinceRegistration < 60) {
-            $issues[] = 'Member must be registered for at least 60 days';
+        if ($daysSinceRegistration < $minDays) {
+            $issues[] = "Member must be registered for at least {$minDays} days";
         }
 
-        // Check contribution requirements based on claim type
-        $contributionRequirement = $this->getContributionRequirementForClaimType($claimType);
+        // Check contribution requirements - USE SETTINGS
+        $healthEligibility = $settingService->get('health_eligibility', []);
+        $contributionRequirement = $this->getContributionRequirementForClaimType($claimType, $healthEligibility);
+
         $contributionCount = $this->contributions()
             ->where('status', 'paid')
             ->count();
@@ -281,11 +323,13 @@ class Member extends Model
     /**
      * Get contribution requirement based on claim type.
      */
-    protected function getContributionRequirementForClaimType(string $claimType): int
+    protected function getContributionRequirementForClaimType(string $claimType, array $settings = []): int
     {
         return match ($claimType) {
-            'outpatient' => 1, // Any contribution
-            'inpatient', 'surgery', 'maternity' => 5, // 5 months contributions
+            'outpatient' => $settings['min_contributions_outpatient'] ?? 1,
+            'inpatient' => $settings['min_contributions_inpatient'] ?? 5,
+            'surgery' => $settings['min_contributions_surgery'] ?? 5,
+            'maternity' => $settings['min_contributions_maternity'] ?? 5,
             default => 1,
         };
     }

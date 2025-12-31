@@ -2,6 +2,9 @@
 
 use App\Models\Contribution;
 use App\Services\ContributionService;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] class extends Component {
@@ -12,59 +15,17 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
         'date_to' => '',
     ];
 
-    public $selectedContribution = null;
-    public $showVerificationModal = false;
-    public $verificationNotes = '';
+    #[On('contributionVerified')]
+    public function refresh(): void
+    {
+        // Table will refresh automatically because of computed properties
+    }
 
     public function mount(): void
     {
         // Set default date range to last 30 days
         $this->filters['date_from'] = now()->subDays(30)->format('Y-m-d');
         $this->filters['date_to'] = now()->format('Y-m-d');
-    }
-
-    public function verifyContribution(Contribution $contribution, bool $approved): void
-    {
-        $this->selectedContribution = $contribution;
-        $this->showVerificationModal = true;
-        $this->verificationNotes = '';
-    }
-
-    public function confirmVerification(bool $approved): void
-    {
-        if (!$this->selectedContribution) {
-            return;
-        }
-
-        $contributionService = app(ContributionService::class);
-
-        try {
-            $contributionService->verifyContribution(
-                $this->selectedContribution,
-                $approved,
-                $this->verificationNotes
-            );
-
-            $status = $approved ? 'approved' : 'rejected';
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => "Contribution {$status} successfully!",
-            ]);
-
-            $this->closeModal();
-        } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Failed to verify contribution: ' . $e->getMessage(),
-            ]);
-        }
-    }
-
-    public function closeModal(): void
-    {
-        $this->showVerificationModal = false;
-        $this->selectedContribution = null;
-        $this->verificationNotes = '';
     }
 
     public function clearFilters(): void
@@ -77,13 +38,15 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
         ];
     }
 
-    public function getContributionsProperty()
+    #[Computed]
+    public function contributions()
     {
         $contributionService = app(ContributionService::class);
         return $contributionService->getPendingVerifications($this->filters);
     }
 
-    public function getStatsProperty()
+    #[Computed]
+    public function stats()
     {
         $contributionService = app(ContributionService::class);
         $pendingContributions = $contributionService->getPendingVerifications($this->filters, 1000);
@@ -122,7 +85,7 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                     Review and verify member-submitted contributions
                 </flux:text>
             </div>
-            <div class="grid max-w-xs grid-cols-1 gap-3 sm:w-auto">
+            <div wire:key="verification-stats-wrapper" class="grid max-w-xs grid-cols-1 gap-3 sm:w-auto">
                 <div
                     class="rounded-xl border border-yellow-200 bg-white p-4 sm:p-5 dark:border-yellow-900/40 dark:bg-neutral-800">
                     <div class="flex items-center gap-3">
@@ -160,16 +123,16 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
             <flux:input wire:model.live.debounce.300ms="filters.search" label="Search"
                 placeholder="Member name, receipt number..." />
 
-            <flux:select wire:model="filters.payment_method" label="Payment Method" placeholder="All methods">
+            <flux:select wire:model.live="filters.payment_method" label="Payment Method" placeholder="All methods">
                 <option value="">All Methods</option>
                 @foreach($this->paymentMethodOptions as $value => $label)
                     <option value="{{ $value }}">{{ $label }}</option>
                 @endforeach
             </flux:select>
 
-            <flux:input wire:model="filters.date_from" label="From Date" type="date" />
+            <flux:input wire:model.live="filters.date_from" label="From Date" type="date" />
 
-            <flux:input wire:model="filters.date_to" label="To Date" type="date" />
+            <flux:input wire:model.live="filters.date_to" label="To Date" type="date" />
         </div>
     </div>
 
@@ -223,7 +186,8 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                     </thead>
                     <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
                         @foreach($this->contributions as $contribution)
-                            <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/60">
+                            <tr wire:key="contribution-row-{{ $contribution->id }}"
+                                class="hover:bg-neutral-50 dark:hover:bg-neutral-700/60">
                                 <td class="px-6 py-4">
                                     <div class="space-y-1">
                                         <flux:text class="text-sm font-medium text-neutral-900 dark:text-white">
@@ -281,14 +245,12 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <flux:button variant="primary" size="sm" class="gap-2"
-                                            wire:click="verifyContribution({{ $contribution->id }}, true)">
-                                            <flux:icon name="check" class="size-4" />
+                                        <flux:button icon="check" variant="primary" size="sm" class="gap-2"
+                                            wire:click="$dispatch('open-verification-modal', { contributionId: {{ $contribution->id }} })">
                                             Approve
                                         </flux:button>
-                                        <flux:button variant="danger" size="sm" icon="x-mark" class="gap-2"
-                                            wire:click="verifyContribution({{ $contribution->id }}, false)">
-
+                                        <flux:button icon="x-mark" variant="danger" size="sm" class="gap-2"
+                                            wire:click="$dispatch('open-verification-modal', { contributionId: {{ $contribution->id }} })">
                                             Reject
                                         </flux:button>
                                     </div>
@@ -299,7 +261,8 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
                 </table>
             </div>
 
-            <div class="border-t border-neutral-200 px-4 py-4 sm:px-6 dark:border-neutral-700">
+            <div wire:key="pagination-container"
+                class="border-t border-neutral-200 px-4 py-4 sm:px-6 dark:border-neutral-700">
                 {{ $this->contributions->links() }}
             </div>
         @else
@@ -314,79 +277,8 @@ new #[Layout('components.layouts.app', ['title' => 'Verify Contributions'])] cla
             </div>
         @endif
     </div>
-</div>
 
-<!-- Verification Modal -->
-@if($showVerificationModal && $selectedContribution)
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex min-h-screen items-end justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-neutral-900/60 transition-opacity" wire:click="closeModal" aria-hidden="true">
-            </div>
-
-            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
-
-            <div
-                class="inline-block w-full max-w-xl transform overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-xl transition-all dark:border-neutral-700 dark:bg-neutral-800 sm:my-8 sm:align-middle">
-                <div class="px-4 pt-5 pb-4 sm:px-6 sm:pb-4">
-                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-                        <div
-                            class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 sm:h-10 sm:w-10">
-                            <flux:icon name="check-circle" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div class="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <flux:heading size="md" class="font-semibold text-neutral-900 dark:text-white" id="modal-title">
-                                Verify Contribution
-                            </flux:heading>
-                            <div class="mt-3 space-y-4">
-                                <div
-                                    class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="font-medium text-neutral-500 dark:text-neutral-400">Member</span>
-                                        <span
-                                            class="text-neutral-900 dark:text-white">{{ $selectedContribution->member->full_name }}</span>
-                                    </div>
-                                    <div class="mt-2 flex justify-between text-sm">
-                                        <span class="font-medium text-neutral-500 dark:text-neutral-400">Amount</span>
-                                        <span
-                                            class="text-neutral-900 dark:text-white">₦{{ number_format($selectedContribution->amount) }}</span>
-                                    </div>
-                                    <div class="mt-2 flex justify-between text-sm">
-                                        <span class="font-medium text-neutral-500 dark:text-neutral-400">Method</span>
-                                        <span
-                                            class="text-neutral-900 dark:text-white">{{ $selectedContribution->payment_method_label }}</span>
-                                    </div>
-                                    <div class="mt-2 flex justify-between text-sm">
-                                        <span class="font-medium text-neutral-500 dark:text-neutral-400">Reference</span>
-                                        <span
-                                            class="font-mono text-neutral-900 dark:text-white">{{ $selectedContribution->payment_reference }}</span>
-                                    </div>
-                                </div>
-
-                                <flux:textarea wire:model="verificationNotes" label="Verification Notes"
-                                    placeholder="Add any notes about this verification..." rows="3" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="flex flex-col gap-3 border-t border-neutral-200 bg-neutral-50 px-4 py-3 sm:flex-row sm:justify-end sm:px-6 dark:border-neutral-700 dark:bg-neutral-900">
-                    <flux:button variant="primary" icon="check" wire:click="confirmVerification(true)"
-                        class="w-full gap-2 sm:w-auto">
-
-                        Approve Contribution
-                    </flux:button>
-                    <flux:button variant="danger" icon="x-mark" wire:click="confirmVerification(false)"
-                        class="w-full gap-2 sm:w-auto">
-
-                        Reject Contribution
-                    </flux:button>
-                    <flux:button variant="outline" icon="x-circle" wire:click="closeModal" class="w-full gap-2 sm:w-auto">
-
-                        Cancel
-                    </flux:button>
-                </div>
-            </div>
-        </div>
+    <div wire:ignore>
+        <livewire:contributions.verification-modal />
     </div>
-@endif
 </div>

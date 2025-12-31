@@ -49,26 +49,36 @@ new class extends Component {
     }
 }; ?>
 
-<x-slot name="header">
-    <div class="flex items-center justify-between">
-        <h2 class="leading-tight text-xl font-semibold text-gray-900 dark:text-white">{{ __('Contribution Plans') }}
-        </h2>
-        <flux:button variant="primary" icon="plus-circle" :href="route('admin.contribution-plans.create')" primary
-            wire:navigate class="gap-2">
-
-            {{ __('Create New Plan') }}
-        </flux:button>
-    </div>
-</x-slot>
-
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div
+            class="mb-6 rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="space-y-1.5">
+                    <flux:heading size="xl" class="font-bold text-neutral-900 dark:text-white">
+                        {{ __('Contribution Plans') }}
+                    </flux:heading>
+                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">
+                        {{ __('Manage contribution plans for your organization.') }}
+                    </flux:text>
+                </div>
+                <div>
+                    <flux:button variant="primary" icon="plus-circle" :href="route('admin.contribution-plans.create')"
+                        wire:navigate class="gap-2">
+                        {{ __('Create New Plan') }}
+                    </flux:button>
+                </div>
+            </div>
+        </div>
         <div
             class="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
             <!-- Search -->
             <div class="mb-6">
-                <flux:input wire:model.live.debounce.300ms="search"
-                    placeholder="{{ __('Search contribution plans...') }}" icon="magnifying-glass" />
+                <div class="flex items-center gap-x-4">
+                    <flux:input wire:model.live.debounce.300ms="search"
+                        placeholder="{{ __('Search contribution plans...') }}" icon="magnifying-glass" class="flex-1" />
+                </div>
             </div>
 
             <!-- Plans Table -->

@@ -7,6 +7,7 @@ use App\Services\ContributionService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
 
 new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class extends Component {
     use WithPagination;
@@ -81,7 +82,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         $this->resetPage();
     }
 
-    public function getContributionsProperty()
+    #[Computed]
+    public function contributions()
     {
         $contributionService = app(ContributionService::class);
 
@@ -97,7 +99,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         return $contributionService->getContributions($filters, $this->perPage);
     }
 
-    public function getStatsProperty()
+    #[Computed]
+    public function stats()
     {
         $contributionService = app(ContributionService::class);
 
@@ -109,12 +112,14 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         return $contributionService->getContributionStats($filters);
     }
 
-    public function getMembersProperty()
+    #[Computed]
+    public function members()
     {
         return Member::orderBy('full_name')->get();
     }
 
-    public function getStatusOptionsProperty()
+    #[Computed]
+    public function statusOptions()
     {
         return [
             'paid' => 'Paid',
@@ -124,7 +129,8 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         ];
     }
 
-    public function getPaymentMethodOptionsProperty()
+    #[Computed]
+    public function paymentMethodOptions()
     {
         return [
             'cash' => 'Cash',
@@ -134,12 +140,14 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         ];
     }
 
-    public function getStatesProperty()
+    #[Computed]
+    public function states()
     {
         return \App\Models\State::orderBy('name')->get();
     }
 
-    public function getLgasProperty()
+    #[Computed]
+    public function lgas()
     {
         if (!$this->state_id) {
             return collect();
@@ -200,7 +208,7 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                         Paid
                     </flux:text>
                     <flux:heading size="lg" class="font-semibold text-base sm:text-lg text-neutral-900 dark:text-white">
-                        {{ $this->stats['paid_contributions'] }}
+                        {{ $this->stats['paid_count'] }}
                     </flux:heading>
                 </div>
             </div>
@@ -216,7 +224,7 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                         Pending
                     </flux:text>
                     <flux:heading size="lg" class="font-semibold text-base sm:text-lg text-neutral-900 dark:text-white">
-                        {{ $this->stats['pending_contributions'] }}
+                        {{ $this->stats['pending_count'] }}
                     </flux:heading>
                 </div>
             </div>
@@ -224,15 +232,15 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         <div
             class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-700 dark:bg-neutral-800">
             <div class="flex items-center gap-3">
-                <div class="rounded-lg bg-red-100 p-2 sm:p-3 dark:bg-red-900/20">
-                    <flux:icon name="exclamation-circle" class="size-5 sm:size-6 text-red-600 dark:text-red-400" />
+                <div class="rounded-lg bg-purple-100 p-2 sm:p-3 dark:bg-purple-900/20">
+                    <flux:icon name="user-circle" class="size-5 sm:size-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div class="min-w-0 flex-1">
                     <flux:text class="text-xs sm:text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                        Overdue
+                        Member Submitted
                     </flux:text>
                     <flux:heading size="lg" class="font-semibold text-base sm:text-lg text-neutral-900 dark:text-white">
-                        {{ $this->stats['overdue_contributions'] }}
+                        {{ $this->stats['member_submitted_count'] }}
                     </flux:heading>
                 </div>
             </div>
@@ -242,9 +250,20 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
     <!-- Filters -->
     <div class="rounded-xl border border-neutral-200 bg-white p-4 sm:p-6 dark:border-neutral-700 dark:bg-neutral-800">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <flux:heading size="sm" class="font-medium text-neutral-900 dark:text-white">
-                Filters
-            </flux:heading>
+            <div class="flex items-center gap-4">
+                <flux:heading size="sm" class="font-medium text-neutral-900 dark:text-white">
+                    Filters
+                </flux:heading>
+                <div class="flex items-center gap-2">
+                    <flux:text size="sm" class="whitespace-nowrap">Per Page:</flux:text>
+                    <flux:select wire:model.live="perPage" size="sm" class="w-20">
+                        <option value="15">15</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </flux:select>
+                </div>
+            </div>
             <flux:button size="sm" wire:click="clearFilters">
                 Clear Filters
             </flux:button>
@@ -309,84 +328,84 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
         @if($this->contributions->count() > 0)
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-                    <thead class="bg-neutral-50 dark:bg-neutral-900">
+                    <thead class="bg-neutral-50 dark:bg-neutral-900 text-[10px] sm:text-xs">
                         <tr>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                 Receipt</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                 Member</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden md:table-cell">
                                 Plan</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                 Amount</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden lg:table-cell">
                                 Payment</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden xl:table-cell">
                                 Receipt File</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                 Status</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">
                                 Date</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                 Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
+                    <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800 text-xs sm:text-sm">
                         @foreach($this->contributions as $contribution)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900">
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
                                     {{ $contribution->receipt_number }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    <div>{{ $contribution->member->full_name }}</div>
-                                    <div class="text-xs text-neutral-500 dark:text-neutral-400">
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
+                                    <div class="font-medium">{{ $contribution->member->full_name }}</div>
+                                    <div class="text-[10px] sm:text-xs text-neutral-500 dark:text-neutral-400">
                                         {{ $contribution->member->registration_no }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden md:table-cell">
                                     {{ $contribution->contributionPlan?->label }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    <div>₦{{ number_format($contribution->amount, 2) }}</div>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
+                                    <div class="font-medium">₦{{ number_format($contribution->amount, 2) }}</div>
                                     @if($contribution->fine_amount > 0)
-                                        <div class="text-xs text-red-600 dark:text-red-400">
+                                        <div class="text-[10px] text-red-600 dark:text-red-400">
                                             +₦{{ number_format($contribution->fine_amount, 2) }} fine</div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden lg:table-cell">
                                     <div>{{ $contribution->payment_method_label }}</div>
                                     @if($contribution->payment_reference)
-                                        <div class="text-xs text-neutral-400 dark:text-neutral-500">
+                                        <div class="text-[10px] text-neutral-400 dark:text-neutral-500">
                                             {{ $contribution->payment_reference }}
                                         </div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden xl:table-cell">
                                     @if($contribution->has_receipt)
                                         <div class="flex items-center gap-2">
                                             <flux:icon name="document-text" class="size-4 text-green-600 dark:text-green-400" />
                                             <span class="text-xs text-green-600 dark:text-green-400">Uploaded</span>
                                         </div>
                                         @if($contribution->is_member_submitted)
-                                            <div class="text-xs text-neutral-400 dark:text-neutral-500">by
-                                                {{ $contribution->uploader->name ?? 'Member' }}
+                                            <div class="text-[10px] text-neutral-400 dark:text-neutral-500">by
+                                                {{ $contribution->uploader?->name ?? 'Member' }}
                                             </div>
                                         @endif
                                     @else
-                                        <span class="text-neutral-400 dark:text-neutral-500 text-xs">No receipt</span>
+                                        <span class="text-neutral-400 dark:text-neutral-500 text-[10px]">No receipt</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                    <span class="inline-flex px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-full 
                                                                              @if($contribution->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
                                                                              @elseif($contribution->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
                                                                              @elseif($contribution->status === 'overdue') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
@@ -395,30 +414,30 @@ new #[Layout('components.layouts.app', ['title' => 'Contributions'])] class exte
                                         {{ $contribution->status_label }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
-                                    {{ $contribution->payment_date->format('M d, Y') }}
+                                <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden sm:table-cell">
+                                    {{ $contribution->payment_date->format('d M, Y') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap font-medium">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <flux:button size="sm" href="{{ route('contributions.show', $contribution) }}">
+                                        <flux:button size="sm" variant="ghost" href="{{ route('contributions.show', $contribution) }}">
                                             View
                                         </flux:button>
-                                        <flux:button size="sm" icon="document-arrow-down"
+                                        <flux:button size="sm" variant="ghost" icon="document-arrow-down"
                                             href="{{ route('contributions.receipt.download', $contribution) }}"
                                             title="Download Receipt">
                                         </flux:button>
                                         @if($contribution->has_receipt)
-                                            <flux:button variant="outline" size="sm"
+                                            <flux:button variant="ghost" size="sm"
                                                 wire:click="$dispatch('open-receipt-modal', { contributionId: {{ $contribution->id }} })">
                                                 Receipt
                                             </flux:button>
                                         @endif
                                         @if($contribution->status === 'pending' && $contribution->is_member_submitted)
-                                            <flux:button variant="primary" size="sm" href="{{ route('contributions.verify') }}">
+                                            <flux:button variant="primary" size="sm" href="{{ route('contributions.verify', ['id' => $contribution->id]) }}">
                                                 Verify
                                             </flux:button>
                                         @elseif($contribution->status === 'pending')
-                                            <flux:button size="sm" href="{{ route('contributions.edit', $contribution) }}">
+                                            <flux:button size="sm" variant="ghost" href="{{ route('contributions.edit', $contribution) }}">
                                                 Edit
                                             </flux:button>
                                         @endif

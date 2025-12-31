@@ -20,8 +20,6 @@ class ContributionFactory extends Factory
     public function definition(): array
     {
         $paymentDate = fake()->dateTimeBetween('-1 year', 'now');
-        $periodStart = fake()->dateTimeBetween($paymentDate, 'now');
-        $periodEnd = fake()->dateTimeBetween($periodStart, '+1 month');
 
         return [
             'member_id' => Member::factory(),
@@ -30,8 +28,6 @@ class ContributionFactory extends Factory
             'payment_method' => fake()->randomElement(['cash', 'transfer', 'bank_deposit', 'mobile_money']),
             'payment_reference' => fake()->optional(0.7)->bothify('TXN#######'),
             'payment_date' => $paymentDate,
-            'period_start' => $periodStart,
-            'period_end' => $periodEnd,
             'status' => fake()->randomElement(['paid', 'pending', 'overdue']),
             'collected_by' => User::factory(),
             'fine_amount' => 0,
@@ -49,7 +45,7 @@ class ContributionFactory extends Factory
      */
     public function paid(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'paid',
             'fine_amount' => 0,
         ]);
@@ -60,7 +56,7 @@ class ContributionFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'pending',
             'fine_amount' => 0,
         ]);
@@ -73,11 +69,10 @@ class ContributionFactory extends Factory
     {
         $amount = fake()->randomFloat(2, 100, 5000);
 
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'overdue',
             'fine_amount' => $amount * 0.5, // 50% fine
             'payment_date' => fake()->dateTimeBetween('-6 months', '-1 month'),
-            'period_end' => fake()->dateTimeBetween('-3 months', '-1 month'),
         ]);
     }
 
@@ -88,7 +83,7 @@ class ContributionFactory extends Factory
     {
         $amount = fake()->randomFloat(2, 100, 5000);
 
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'fine_amount' => $amount * 0.5,
             'status' => 'overdue',
         ]);
@@ -99,7 +94,7 @@ class ContributionFactory extends Factory
      */
     public function cash(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'payment_method' => 'cash',
             'payment_reference' => null,
         ]);
@@ -110,7 +105,7 @@ class ContributionFactory extends Factory
      */
     public function transfer(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'payment_method' => 'transfer',
             'payment_reference' => fake()->bothify('TXN#######'),
         ]);
@@ -121,7 +116,7 @@ class ContributionFactory extends Factory
      */
     public function memberSubmitted(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'pending',
             'collected_by' => null,
             'uploaded_by' => User::factory(),
@@ -136,7 +131,7 @@ class ContributionFactory extends Factory
      */
     public function pendingVerification(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'pending',
             'collected_by' => null,
             'uploaded_by' => User::factory(),
@@ -152,7 +147,7 @@ class ContributionFactory extends Factory
      */
     public function verified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'paid',
             'collected_by' => User::factory(),
             'verified_at' => fake()->dateTimeBetween('-1 month', 'now'),
@@ -166,7 +161,7 @@ class ContributionFactory extends Factory
      */
     public function rejected(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'cancelled',
             'collected_by' => User::factory(),
             'verified_at' => fake()->dateTimeBetween('-1 month', 'now'),

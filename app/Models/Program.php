@@ -23,6 +23,8 @@ class Program extends Model
         'eligibility_rules',
         'capacity',
         'created_by',
+        'state_id',
+        'lga_id',
     ];
 
     protected $casts = [
@@ -46,6 +48,40 @@ class Program extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(ProgramEnrollment::class);
+    }
+
+    /**
+     * Get the state this program is targeted to.
+     */
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
+    }
+
+    /**
+     * Get the LGA this program is targeted to.
+     */
+    public function lga(): BelongsTo
+    {
+        return $this->belongsTo(Lga::class);
+    }
+
+    /**
+     * Scope to filter programs by member location.
+     * Shows national programs, state-wide programs, and LGA-specific programs.
+     */
+    public function scopeForMemberLocation($query, Member $member)
+    {
+        return $query->where(function ($q) use ($member) {
+            $q->whereNull('state_id') // National programs
+              ->orWhere(function ($q2) use ($member) {
+                  $q2->where('state_id', $member->state_id)
+                     ->where(function ($q3) use ($member) {
+                         $q3->whereNull('lga_id') // State-wide
+                            ->orWhere('lga_id', $member->lga_id); // LGA-specific
+                     });
+              });
+        });
     }
 
     /**

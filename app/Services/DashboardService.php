@@ -18,6 +18,12 @@ class DashboardService
      */
     public function getDashboardData(User $user): array
     {
+        // Check if dynamic builder is enabled
+        if (config('dashboard.features.use_dynamic_builder', true)) {
+            return app(\App\Services\Dashboard\DynamicDashboardBuilder::class)->build($user);
+        }
+
+        // Fallback to legacy role-based dashboards
         $role = $user->role?->name ?? 'member';
 
         return match ($role) {
@@ -176,7 +182,7 @@ class DashboardService
                 'trend' => $this->getContributionTrend(),
             ],
             [
-                'title' => 'Pending Verifications',
+                'title' => 'Pending Verifications Contr.',
                 'value' => number_format($pendingVerifications),
                 'icon' => 'clock',
                 'color' => 'yellow',

@@ -88,72 +88,89 @@ new #[Layout('components.layouts.app', ['title' => 'My Contributions'])] class e
             @if($contributions->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-                        <thead class="bg-neutral-50 dark:bg-neutral-900">
+                        <thead class="bg-neutral-50 dark:bg-neutral-900 text-[10px] sm:text-xs">
                             <tr>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                     {{ __('Receipt No') }}
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">
                                     {{ __('Plan') }}
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden md:table-cell">
+                                    {{ __('Period') }}
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                     {{ __('Amount') }}
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden lg:table-cell">
                                     {{ __('Fine') }}
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                                    {{ __('Payment Date') }}
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">
+                                    {{ __('Paid Date') }}
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                     {{ __('Status') }}
                                 </th>
                                 <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                     {{ __('Actions') }}
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
+                        <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700 text-xs sm:text-sm">
                             @foreach($contributions as $contribution)
-                                            <tr>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                            <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900">
+                                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
                                                     {{ $contribution->receipt_number }}
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                <td
+                                                    class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden sm:table-cell">
                                                     {{ $contribution->contributionPlan?->label ?? 'N/A' }}
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                    ₦{{ number_format($contribution->amount, 2) }}
+                                                <td
+                                                    class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden md:table-cell">
+                                                    {{ $contribution->period_coverage }}
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
+                                                    <div class="font-medium">₦{{ number_format($contribution->amount, 2) }}</div>
                                                     @if($contribution->fine_amount > 0)
-                                                        <span class="text-red-600 dark:text-red-400">
+                                                        <div class="text-[10px] text-red-600 dark:text-red-400 lg:hidden">
+                                                            +₦{{ number_format($contribution->fine_amount, 2) }} fine
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                                <td
+                                                    class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden lg:table-cell">
+                                                    @if($contribution->fine_amount > 0)
+                                                        <span class="text-red-600 dark:text-red-400 font-medium">
                                                             ₦{{ number_format($contribution->fine_amount, 2) }}
                                                         </span>
                                                     @else
                                                         <span class="text-neutral-400">-</span>
                                                     @endif
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                    {{ $contribution->payment_date->format('M d, Y') }}
+                                                <td
+                                                    class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden sm:table-cell">
+                                                    {{ $contribution->payment_date->format('d M, Y') }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                                                    {{ $contribution->status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold
+                                                                                                        {{ $contribution->status === 'paid' || $contribution->status === 'verified' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
                                 ($contribution->status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
                                     'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200') }}">
                                                         {{ ucfirst($contribution->status) }}
                                                     </span>
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <flux:button :href="route('contributions.show', $contribution)" size="sm" wire:navigate>
+                                                <td class="px-6 py-4 whitespace-nowrap font-medium text-sm">
+                                                    <flux:button :href="route('contributions.show', $contribution)" size="sm"
+                                                        variant="ghost" wire:navigate>
                                                         {{ __('View') }}
                                                     </flux:button>
                                                 </td>

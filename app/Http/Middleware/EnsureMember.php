@@ -19,8 +19,14 @@ class EnsureMember
             return redirect()->route('login');
         }
 
-        if (!auth()->user()->member) {
+        $user = auth()->user();
+        if (!$user->member) {
             abort(403, 'Member account required to access this page.');
+        }
+
+        // Enforce profile completion
+        if (!$user->member->is_complete && !$request->routeIs('members.complete', 'logout')) {
+            return redirect()->route('members.complete');
         }
 
         return $next($request);

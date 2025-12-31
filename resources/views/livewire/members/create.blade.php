@@ -328,7 +328,7 @@ new #[Layout('components.layouts.app', ['title' => 'Register Member'])] class ex
                             
                             <flux:input 
                                 wire:model="family_name" 
-                                label="Family Name" 
+                                label="Last Name" 
                                 required
                             />
                             

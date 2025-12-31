@@ -16,7 +16,13 @@
         <flux:navlist variant="outline">
             @php
                 $user = auth()->user();
-                $isStaff = $user->hasRole('Super Admin') || $user->hasRole('System Admin') || $user->hasRole('Manager') || $user->hasRole('Staff');
+                $isStaff = $user->hasRole('Super Admin')
+                    || $user->hasRole('System Admin')
+                    || $user->hasRole('Manager')
+                    || $user->hasRole('Staff')
+                    || $user->hasRole('Finance Officer')
+                    || $user->hasRole('Health Officer')
+                    || $user->hasRole('Program Officer');
                 $isMember = $user->member && !$isStaff;
             @endphp
 
@@ -27,10 +33,7 @@
                         :current="request()->routeIs('my.dashboard')" wire:navigate>{{ __('Dashboard') }}
                     </flux:navlist.item>
                     <flux:navlist.item icon="user" :href="route('my.profile')" :current="request()->routeIs('my.profile')"
-                        wire:navigate>{{ __('My Profile') }}</flux:navlist.item>
-                    <flux:navlist.item icon="users" :href="route('my.dependents')"
-                        :current="request()->routeIs('my.dependents')" wire:navigate>{{ __('My Dependents') }}
-                    </flux:navlist.item>
+                        wire:navigate>{{ __('Profile') }}</flux:navlist.item>
                 </flux:navlist.group>
 
                 <flux:navlist.group :heading="__('Contributions')" class="grid">
@@ -83,61 +86,83 @@
                         wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
 
-                <flux:navlist.group :heading="__('Members')" class="grid">
-                    <flux:navlist.item icon="users" :href="route('members.index')"
-                        :current="request()->routeIs('members.*')" wire:navigate>{{ __('All Members') }}</flux:navlist.item>
-                    <flux:navlist.item icon="plus" :href="route('members.create')"
-                        :current="request()->routeIs('members.create')" wire:navigate>{{ __('Register Member') }}
-                    </flux:navlist.item>
-                </flux:navlist.group>
+                @if(auth()->user()->hasPermission('view_members'))
+                    <flux:navlist.group :heading="__('Members')" class="grid">
+                        <flux:navlist.item icon="users" :href="route('members.index')"
+                            :current="request()->routeIs('members.*')" wire:navigate>{{ __('All Members') }}</flux:navlist.item>
 
-                <flux:navlist.group :heading="__('Contributions')" class="grid">
-                    <flux:navlist.item icon="currency-dollar" :href="route('contributions.index')"
-                        :current="request()->routeIs('contributions.index')" wire:navigate>{{ __('All Contributions') }}
-                    </flux:navlist.item>
-                    <flux:navlist.item icon="plus" :href="route('contributions.create')"
-                        :current="request()->routeIs('contributions.create')" wire:navigate>{{ __('Record Contribution') }}
-                    </flux:navlist.item>
+                        @if(auth()->user()->hasPermission('create_members'))
+                            <flux:navlist.item icon="plus" :href="route('members.create')"
+                                :current="request()->routeIs('members.create')" wire:navigate>{{ __('Register Member') }}
+                            </flux:navlist.item>
+                        @endif
+                    </flux:navlist.group>
+                @endif
 
-                    @if(auth()->user()->hasPermission('confirm_contributions'))
-                        <flux:navlist.item icon="check-circle" :href="route('contributions.verify')"
-                            :current="request()->routeIs('contributions.verify')" wire:navigate>{{ __('Verify Contributions') }}
-                        </flux:navlist.item>
-                    @endif
-                </flux:navlist.group>
-
-                <flux:navlist.group :heading="__('Loans')" class="grid">
-                    <flux:navlist.item icon="banknotes" :href="route('loans.index')"
-                        :current="request()->routeIs('loans.*')" wire:navigate>{{ __('All Loans') }}</flux:navlist.item>
-                    <flux:navlist.item icon="plus" :href="route('loans.create')"
-                        :current="request()->routeIs('loans.create')" wire:navigate>{{ __('Create Loan') }}
-                    </flux:navlist.item>
-                </flux:navlist.group>
-
-                <flux:navlist.group :heading="__('Health Claims')" class="grid">
-                    <flux:navlist.item icon="heart" :href="route('health-claims.index')"
-                        :current="request()->routeIs('health-claims.*')" wire:navigate>{{ __('All Claims') }}
-                    </flux:navlist.item>
-                    <flux:navlist.item icon="plus" :href="route('health-claims.create')"
-                        :current="request()->routeIs('health-claims.create')" wire:navigate>{{ __('Create Claim') }}
-                    </flux:navlist.item>
-                </flux:navlist.group>
-
-                <flux:navlist.group :heading="__('Programs')" class="grid">
-                    <flux:navlist.item icon="academic-cap" :href="route('programs.index')"
-                        :current="request()->routeIs('programs.index')" wire:navigate>{{ __('All Programs') }}
-                    </flux:navlist.item>
-
-                    @if(auth()->user()->hasPermission('manage_programs'))
-                        <flux:navlist.item icon="plus" :href="route('programs.create')"
-                            :current="request()->routeIs('programs.create')" wire:navigate>{{ __('Create Program') }}
+                @if(auth()->user()->hasPermission('view_contributions'))
+                    <flux:navlist.group :heading="__('Contributions')" class="grid">
+                        <flux:navlist.item icon="currency-dollar" :href="route('contributions.index')"
+                            :current="request()->routeIs('contributions.index')" wire:navigate>{{ __('All Contributions') }}
                         </flux:navlist.item>
 
-                        <flux:navlist.item icon="users" :href="route('program-enrollments.index')"
-                            :current="request()->routeIs('program-enrollments.*')" wire:navigate>{{ __('Manage Enrollments') }}
+                        @if(auth()->user()->hasPermission('record_contributions'))
+                            <flux:navlist.item icon="plus" :href="route('contributions.create')"
+                                :current="request()->routeIs('contributions.create')" wire:navigate>{{ __('Record Contribution') }}
+                            </flux:navlist.item>
+                        @endif
+
+                        @if(auth()->user()->hasPermission('confirm_contributions'))
+                            <flux:navlist.item icon="check-circle" :href="route('contributions.verify')"
+                                :current="request()->routeIs('contributions.verify')" wire:navigate>{{ __('Verify Contributions') }}
+                            </flux:navlist.item>
+                        @endif
+                    </flux:navlist.group>
+                @endif
+
+                @if(auth()->user()->hasPermission('view_loans'))
+                    <flux:navlist.group :heading="__('Loans')" class="grid">
+                        <flux:navlist.item icon="banknotes" :href="route('loans.index')"
+                            :current="request()->routeIs('loans.*')" wire:navigate>{{ __('All Loans') }}</flux:navlist.item>
+
+                        @if(auth()->user()->hasPermission('create_loans'))
+                            <flux:navlist.item icon="plus" :href="route('loans.create')"
+                                :current="request()->routeIs('loans.create')" wire:navigate>{{ __('Create Loan') }}
+                            </flux:navlist.item>
+                        @endif
+                    </flux:navlist.group>
+                @endif
+
+                @if(auth()->user()->hasPermission('view_claims'))
+                    <flux:navlist.group :heading="__('Health Claims')" class="grid">
+                        <flux:navlist.item icon="heart" :href="route('health-claims.index')"
+                            :current="request()->routeIs('health-claims.*')" wire:navigate>{{ __('All Claims') }}
                         </flux:navlist.item>
-                    @endif
-                </flux:navlist.group>
+
+                        @if(auth()->user()->hasPermission('create_claims'))
+                            <flux:navlist.item icon="plus" :href="route('health-claims.create')"
+                                :current="request()->routeIs('health-claims.create')" wire:navigate>{{ __('Create Claim') }}
+                            </flux:navlist.item>
+                        @endif
+                    </flux:navlist.group>
+                @endif
+
+                @if(auth()->user()->hasPermission('view_programs'))
+                    <flux:navlist.group :heading="__('Programs')" class="grid">
+                        <flux:navlist.item icon="academic-cap" :href="route('programs.index')"
+                            :current="request()->routeIs('programs.index')" wire:navigate>{{ __('All Programs') }}
+                        </flux:navlist.item>
+
+                        @if(auth()->user()->hasPermission('manage_programs'))
+                            <flux:navlist.item icon="plus" :href="route('programs.create')"
+                                :current="request()->routeIs('programs.create')" wire:navigate>{{ __('Create Program') }}
+                            </flux:navlist.item>
+
+                            <flux:navlist.item icon="users" :href="route('program-enrollments.index')"
+                                :current="request()->routeIs('program-enrollments.*')" wire:navigate>{{ __('Manage Enrollments') }}
+                            </flux:navlist.item>
+                        @endif
+                    </flux:navlist.group>
+                @endif
 
                 <flux:navlist.group :heading="__('Cashout')" class="grid">
                     @if(auth()->user()->hasPermission('view_cashout'))
@@ -147,10 +172,12 @@
                     @endif
                 </flux:navlist.group>
 
-                <flux:navlist.group :heading="__('Reports')" class="grid">
-                    <flux:navlist.item icon="chart-bar" :href="route('reports.index')"
-                        :current="request()->routeIs('reports.*')" wire:navigate>{{ __('All Reports') }}</flux:navlist.item>
-                </flux:navlist.group>
+                @if(auth()->user()->hasPermission('view_reports'))
+                    <flux:navlist.group :heading="__('Reports')" class="grid">
+                        <flux:navlist.item icon="chart-bar" :href="route('reports.index')"
+                            :current="request()->routeIs('reports.*')" wire:navigate>{{ __('All Reports') }}</flux:navlist.item>
+                    </flux:navlist.group>
+                @endif
 
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('System Admin'))
                     <flux:navlist.group :heading="__('Administration')" class="grid">

@@ -7,12 +7,35 @@ use App\Models\FundLedger;
 use App\Models\Loan;
 use App\Models\LoanRepayment;
 use App\Models\Member;
+use App\Services\Eligibility\LoanEligibilityChecker;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class LoanService
 {
+    protected LoanEligibilityChecker $eligibilityChecker;
+
+    public function __construct(LoanEligibilityChecker $eligibilityChecker)
+    {
+        $this->eligibilityChecker = $eligibilityChecker;
+    }
+
+    /**
+     * Check loan eligibility for a member.
+     */
+    public function checkLoanEligibility(Member $member, float $amount): array
+    {
+        return $this->eligibilityChecker->checkEligibility($member, $amount);
+    }
+
+    /**
+     * Quick boolean check for loan eligibility.
+     */
+    public function isEligibleForLoan(Member $member, float $amount): bool
+    {
+        return $this->eligibilityChecker->isEligible($member, $amount);
+    }
     /**
      * Create a new loan application.
      */

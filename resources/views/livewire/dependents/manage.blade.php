@@ -176,6 +176,16 @@ new class extends Component {
 
         return $dependentService->getDependentStats($this->member);
     }
+
+    public function getMaxDependentsProperty()
+    {
+        return app(DependentService::class)->getMaxDependentsPerMember();
+    }
+
+    public function getCanAddMoreProperty()
+    {
+        return app(DependentService::class)->canAddMoreDependents($this->member);
+    }
 }; ?>
 
 <div>
@@ -192,10 +202,17 @@ new class extends Component {
                         Manage family members for {{ $member->full_name }}
                     </flux:text>
                 </div>
-                <flux:button variant="primary" icon="user-plus" variant="primary" wire:click="showCreateModal">
-
-                    Add Dependent
-                </flux:button>
+                <div class="flex flex-col items-end gap-2">
+                    @if(!$this->canAddMore)
+                        <flux:text class="text-xs text-red-600 dark:text-red-400 font-medium">
+                            Maximum limit of {{ $this->maxDependents }} dependents reached
+                        </flux:text>
+                    @endif
+                    <flux:button variant="primary" icon="user-plus" wire:click="showCreateModal"
+                        :disabled="!$this->canAddMore">
+                        Add Dependent
+                    </flux:button>
+                </div>
             </div>
 
             <!-- Stats Cards -->
@@ -379,8 +396,13 @@ new class extends Component {
                         Get started by adding a family member.
                     </flux:text>
                     <div class="mt-6">
-                        <flux:button icon="user-plus" variant="primary" wire:click="showCreateModal" class="gap-2">
-
+                        @if(!$this->canAddMore)
+                            <flux:text class="text-xs text-red-600 dark:text-red-400 font-medium mb-2 block">
+                                Maximum limit of {{ $this->maxDependents }} dependents reached
+                            </flux:text>
+                        @endif
+                        <flux:button icon="user-plus" variant="primary" wire:click="showCreateModal" class="gap-2"
+                            :disabled="!$this->canAddMore">
                             Add Dependent
                         </flux:button>
                     </div>

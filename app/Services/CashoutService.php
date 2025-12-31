@@ -196,25 +196,34 @@ class CashoutService
             'member_id' => $member->id,
             'source' => 'cashout',
             'amount' => $request->approved_amount,
-            'description' => "Member cashout - Request #" . $request->id,
+            'description' => "Member cashout - Request #{$request->id} - Cycle " . ($member->cashout_count + 1) . " - Account suspended pending reactivation",
             'transaction_date' => now()->toDateString(),
             'reference' => $request->disbursement_reference,
             'created_by' => auth()->id(),
         ]);
 
-        // 2. Update member: last_cashout_date, increment cashout_count
+        // 2. Update member - RESET CYCLE & SUSPEND ACCOUNT
         $member->update([
             'last_cashout_date' => now(),
             'cashout_count' => $member->cashout_count + 1,
-            'eligibility_start_date' => null, // Reset eligibility
+            'eligibility_start_date' => null,
+            'status' => 'suspended',  // Suspend account (member can still login)
         ]);
 
-        // 3. Archive all paid contributions (mark as processed/cleared)
-        // This prevents double-counting on future cashouts
-        // Note: We don't delete them, just mark them as cleared
+        // 3. Mark contributions as processed (KEEP for audit)
         $member->contributions()
             ->where('status', 'paid')
-            ->update(['notes' => DB::raw("CONCAT(COALESCE(notes, ''), ' [Cashout processed: " . now()->toDateString() . "]')")]);
+            ->update(['notes' => DB::raw("CONCAT(COALESCE(notes, ''), ' [Cashout #" . ($member->cashout_count + 1) . " processed: " . now()->toDateString() . "]')")]);
+
+        // 4. DELETE all expected contributions (CYCLE CLOSURE)
+        $deletedCount = $member->expectedContributions()->delete();
+        
+        \Log::info("Cashout cycle closure: Deleted {$deletedCount} expected contributions for member {$member->id}");
+
+        // 5. DO NOT generate new expected contributions yet
+        // Will be generated when member is reactivated (approved)
+        
+        \Log::info("Cashout cycle closure: Member {$member->id} account suspended, awaiting reactivation request");
     }
 
     /**

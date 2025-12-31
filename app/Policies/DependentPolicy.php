@@ -10,9 +10,12 @@ class DependentPolicy
     /**
      * Determine whether the user can view any models.
      */
+    /**
+     * Determine whether the user can view any models.
+     */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('view_members');
+        return $user->hasPermission('view_dependents');
     }
 
     /**
@@ -20,7 +23,7 @@ class DependentPolicy
      */
     public function view(User $user, Dependent $dependent): bool
     {
-        return $user->hasPermission('view_members');
+        return $user->hasPermission('view_dependents');
     }
 
     /**
@@ -28,7 +31,7 @@ class DependentPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('edit_members');
+        return $user->hasPermission('create_dependents');
     }
 
     /**
@@ -36,7 +39,7 @@ class DependentPolicy
      */
     public function update(User $user, Dependent $dependent): bool
     {
-        return $user->hasPermission('edit_members');
+        return $user->hasPermission('edit_dependents');
     }
 
     /**
@@ -44,7 +47,7 @@ class DependentPolicy
      */
     public function delete(User $user, Dependent $dependent): bool
     {
-        return $user->hasPermission('edit_members');
+        return $user->hasPermission('delete_dependents');
     }
 
     /**
@@ -52,7 +55,7 @@ class DependentPolicy
      */
     public function restore(User $user, Dependent $dependent): bool
     {
-        return $user->hasPermission('edit_members');
+        return $user->hasPermission('edit_dependents');
     }
 
     /**
@@ -60,6 +63,6 @@ class DependentPolicy
      */
     public function forceDelete(User $user, Dependent $dependent): bool
     {
-        return $user->hasPermission('edit_members');
+        return $user->hasPermission('delete_dependents');
     }
 }

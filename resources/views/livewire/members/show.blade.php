@@ -470,55 +470,56 @@ new #[Layout('components.layouts.app', ['title' => 'Member Details'])] class ext
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                                     Date
                                                 </th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">
                                                     Period
                                                 </th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                                     Amount
                                                 </th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden md:table-cell">
                                                     Fine
                                                 </th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden lg:table-cell">
                                                     Method
                                                 </th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                                     Status
                                                 </th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider hidden sm:table-cell">
                                                     Receipt
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
                                             @foreach($member->contributions as $contribution)
-                                                <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900">
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-white">
-                                                        {{ $contribution->payment_date->format('M d, Y') }}
+                                                <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-900 text-xs sm:text-sm">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-neutral-900 dark:text-white">
+                                                        {{ $contribution->payment_date->format('d M, Y') }}
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
-                                                        @if($contribution->period_start && $contribution->period_end)
-                                                            {{ $contribution->period_start->format('M Y') }} - {{ $contribution->period_end->format('M Y') }}
-                                                        @else
-                                                            -
+                                                    <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden sm:table-cell">
+                                                        {{ $contribution->period_coverage }}
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-neutral-900 dark:text-white">
+                                                        ₦{{ number_format($contribution->amount, 2) }}
+                                                        @if($contribution->fine_amount > 0)
+                                                            <div class="text-[10px] text-red-600 dark:text-red-400 md:hidden">
+                                                                +₦{{ number_format($contribution->fine_amount, 2) }} fine
+                                                            </div>
                                                         @endif
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-white">
-                                                        ₦{{ number_format($contribution->amount, 2) }}
-                                                    </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden md:table-cell">
                                                         @if($contribution->fine_amount > 0)
                                                             <span class="text-red-600 dark:text-red-400">₦{{ number_format($contribution->fine_amount, 2) }}</span>
                                                         @else
                                                             -
                                                         @endif
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden lg:table-cell">
                                                         {{ ucfirst($contribution->payment_method) }}
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap">
-                                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                                            @if($contribution->status === 'verified') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                        <span class="inline-flex px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-full 
+                                                            @if($contribution->status === 'verified' || $contribution->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
                                                             @elseif($contribution->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
                                                             @elseif($contribution->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
                                                             @else bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200
@@ -526,7 +527,7 @@ new #[Layout('components.layouts.app', ['title' => 'Member Details'])] class ext
                                                             {{ ucfirst($contribution->status) }}
                                                         </span>
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-neutral-500 dark:text-neutral-400 hidden sm:table-cell">
                                                         @if($contribution->receipt_number)
                                                             <span class="font-mono text-xs">{{ $contribution->receipt_number }}</span>
                                                         @else

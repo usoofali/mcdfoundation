@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Lga;
 use App\Models\Program;
+use App\Models\State;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Volt\Component;
 
@@ -14,6 +16,8 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
     public $end_date = '';
     public $is_active = true;
     public $capacity = null;
+    public $state_id = null;
+    public $lga_id = null;
     public $min_contributions = 0;
     public $min_age = null;
     public $max_age = null;
@@ -29,11 +33,32 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
         $this->end_date = $program->end_date?->format('Y-m-d') ?? '';
         $this->is_active = $program->is_active;
         $this->capacity = $program->capacity;
+        $this->state_id = $program->state_id;
+        $this->lga_id = $program->lga_id;
 
         $rules = $program->eligibility_rules ?? [];
         $this->min_contributions = $rules['min_contributions'] ?? 0;
         $this->min_age = $rules['min_age'] ?? null;
         $this->max_age = $rules['max_age'] ?? null;
+    }
+
+    public function getStatesProperty()
+    {
+        return State::orderBy('name')->get();
+    }
+
+    public function getLgasProperty()
+    {
+        if (!$this->state_id) {
+            return collect();
+        }
+        return Lga::where('state_id', $this->state_id)->orderBy('name')->get();
+    }
+
+    public function updatedStateId()
+    {
+        // Reset LGA when state changes
+        $this->lga_id = null;
     }
 
     public function update(): void
@@ -45,6 +70,8 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_active' => 'boolean',
             'capacity' => 'nullable|integer|min:1',
+            'state_id' => 'nullable|exists:states,id',
+            'lga_id' => 'nullable|exists:lgas,id',
             'min_contributions' => 'required|integer|min:0',
             'min_age' => 'nullable|integer|min:1|max:150',
             'max_age' => 'nullable|integer|min:1|max:150|gte:min_age',
@@ -181,6 +208,47 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Program'])] class exten
                                 @error('max_age') <flux:error>{{ $message }}</flux:error> @enderror
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Location Targeting -->
+                <div class="border-t border-neutral-200 dark:border-neutral-700 pt-6">
+                    <flux:heading size="sm" class="mb-4 font-medium text-neutral-900 dark:text-white">
+                        Location Targeting
+                    </flux:heading>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <flux:select wire:model.live="state_id" label="Target State"
+                                    placeholder="All States (National)">
+                                    <option value="">All States (National Program)</option>
+                                    @foreach($this->states as $state)
+                                        <option value="{{ $state->id }}">{{ $state->name }}</option>
+                                    @endforeach
+                                </flux:select>
+                                @error('state_id') <flux:error>{{ $message }}</flux:error> @enderror
+                            </div>
+
+                            <div>
+                                <flux:select wire:model="lga_id" label="Target LGA" placeholder="All LGAs in State"
+                                    :disabled="!$state_id">
+                                    <option value="">All LGAs (State-wide)</option>
+                                    @foreach($this->lgas as $lga)
+                                        <option value="{{ $lga->id }}">{{ $lga->name }}</option>
+                                    @endforeach
+                                </flux:select>
+                                @error('lga_id') <flux:error>{{ $message }}</flux:error> @enderror
+                            </div>
+                        </div>
+
+                        <flux:text class="text-sm text-neutral-500 dark:text-neutral-400">
+                            🌍 Leave both empty for <strong>national program</strong> (visible to all members)<br>
+                            📍 Select state only for <strong>state-wide program</strong> (visible to all members in that
+                            state)<br>
+                            📌 Select both for <strong>LGA-specific program</strong> (visible only to members in that
+                            LGA)
+                        </flux:text>
                     </div>
                 </div>
 

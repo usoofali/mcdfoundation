@@ -29,6 +29,24 @@ new #[Layout('components.layouts.app', ['title' => 'Enroll in Program'])] class 
             return;
         }
 
+        // Check if program is active
+        if (!$this->program->is_active) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'This program is not currently active.',
+            ]);
+            return;
+        }
+
+        // Check if program is completed
+        if ($this->program->end_date && \Illuminate\Support\Carbon::parse($this->program->end_date)->isPast()) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'This program has already ended.',
+            ]);
+            return;
+        }
+
         // Check capacity
         if ($this->program->capacity && $this->program->enrollments()->count() >= $this->program->capacity) {
             $this->dispatch('notify', [
@@ -38,11 +56,22 @@ new #[Layout('components.layouts.app', ['title' => 'Enroll in Program'])] class 
             return;
         }
 
+        // Check eligibility requirements
+        $eligibilityIssues = $this->checkEligibility($member);
+        if (!empty($eligibilityIssues)) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'You do not meet the eligibility requirements: ' . implode(', ', $eligibilityIssues),
+            ]);
+            return;
+        }
+
         try {
             ProgramEnrollment::create([
                 'program_id' => $this->program->id,
                 'member_id' => $member->id,
-                'status' => 'active',
+                'status' => 'enrolled',
+                'enrolled_at' => now(),
             ]);
 
             $this->dispatch('notify', [
@@ -59,7 +88,60 @@ new #[Layout('components.layouts.app', ['title' => 'Enroll in Program'])] class 
         }
     }
 
-    public function isEnrolledProperty()
+    protected function checkEligibility($member): array
+    {
+        $issues = [];
+
+        if (!$this->program->eligibility_rules) {
+            return $issues;
+        }
+
+        $rules = $this->program->eligibility_rules;
+
+        // Check minimum contributions
+        if (isset($rules['min_contributions'])) {
+            $contributionCount = $member->contributions()->where('status', 'paid')->count();
+            if ($contributionCount < $rules['min_contributions']) {
+                $issues[] = "Minimum {$rules['min_contributions']} contributions required (you have {$contributionCount})";
+            }
+        }
+
+        // Check minimum age
+        if (isset($rules['min_age'])) {
+            $age = $member->age;
+            if ($age < $rules['min_age']) {
+                $issues[] = "Minimum age {$rules['min_age']} years required (you are {$age})";
+            }
+        }
+
+        // Check maximum age
+        if (isset($rules['max_age'])) {
+            $age = $member->age;
+            if ($age > $rules['max_age']) {
+                $issues[] = "Maximum age {$rules['max_age']} years (you are {$age})";
+            }
+        }
+
+        // Check member status
+        if ($member->status !== 'active') {
+            $issues[] = "Member must have active status";
+        }
+
+        // Check location eligibility
+        if ($this->program->state_id) {
+            if ($member->state_id !== $this->program->state_id) {
+                $issues[] = "This program is only available in {$this->program->state->name}";
+            }
+
+            if ($this->program->lga_id && $member->lga_id !== $this->program->lga_id) {
+                $issues[] = "This program is only available in {$this->program->lga->name}";
+            }
+        }
+
+        return $issues;
+    }
+
+    public function getIsEnrolledProperty()
     {
         $member = auth()->user()->member;
         return ProgramEnrollment::where('program_id', $this->program->id)

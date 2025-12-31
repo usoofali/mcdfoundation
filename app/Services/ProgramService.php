@@ -64,6 +64,17 @@ class ProgramService
             }
         }
 
+        // 8. Check location eligibility
+        if ($program->state_id) {
+            if ($member->state_id !== $program->state_id) {
+                return false;
+            }
+
+            if ($program->lga_id && $member->lga_id !== $program->lga_id) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -114,6 +125,16 @@ class ProgramService
             $max = $program->eligibility_rules['max_age'];
             if ($age > $max) {
                 $reasons[] = "Member is {$age} years old; maximum age is {$max}.";
+            }
+        }
+
+        if ($program->state_id) {
+            if ($member->state_id !== $program->state_id) {
+                $reasons[] = "This program is only available in {$program->state->name}.";
+            }
+
+            if ($program->lga_id && $member->lga_id !== $program->lga_id) {
+                $reasons[] = "This program is only available in {$program->lga->name}.";
             }
         }
 

@@ -14,8 +14,6 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
         'payment_method' => 'cash',
         'payment_reference' => '',
         'payment_date' => '',
-        'period_start' => '',
-        'period_end' => '',
         'status' => 'paid',
         'notes' => '',
     ];
@@ -28,8 +26,6 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
     public function mount(): void
     {
         $this->form['payment_date'] = now()->format('Y-m-d');
-        $this->form['period_start'] = now()->format('Y-m-d');
-        $this->form['period_end'] = now()->addMonth()->format('Y-m-d');
     }
 
     public function rules(): array
@@ -41,8 +37,6 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
             'form.payment_method' => 'required|in:cash,transfer,bank_deposit,mobile_money',
             'form.payment_reference' => 'nullable|string|max:255',
             'form.payment_date' => 'required|date|before_or_equal:today',
-            'form.period_start' => 'required|date',
-            'form.period_end' => 'required|date|after_or_equal:form.period_start',
             'form.status' => 'required|in:paid,pending,overdue,cancelled',
             'form.notes' => 'nullable|string|max:1000',
         ];
@@ -284,42 +278,16 @@ new #[Layout('components.layouts.app', ['title' => 'Create Contribution'])] clas
                 </div>
 
                 <!-- Dates -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <flux:input 
-                            wire:model="form.payment_date" 
-                            type="date"
-                            label="Payment Date"
-                            required
-                        />
-                        @error('form.payment_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <flux:input 
-                            wire:model="form.period_start" 
-                            type="date"
-                            label="Period Start"
-                            required
-                        />
-                        @error('form.period_start')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <flux:input 
-                            wire:model="form.period_end" 
-                            type="date"
-                            label="Period End"
-                            required
-                        />
-                        @error('form.period_end')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <div>
+                    <flux:input 
+                        wire:model="form.payment_date" 
+                        type="date"
+                        label="Payment Date"
+                        required
+                    />
+                    @error('form.payment_date')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Status and Notes -->

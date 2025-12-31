@@ -390,7 +390,7 @@ new #[Layout('components.layouts.app', ['title' => 'Edit Member'])] class extend
                     <div class="px-6 py-4 space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <flux:input wire:model="full_name" label="First Name" required />
-                            <flux:input wire:model="family_name" label="Family Name" required />
+                            <flux:input wire:model="family_name" label="Last Name" required />
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
