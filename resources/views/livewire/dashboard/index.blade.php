@@ -131,14 +131,8 @@ new class extends Component
                             wire:loading.attr="disabled"
                             wire:target="refreshDashboard"
                             class="gap-2"
+                            icon="arrow-path"
                             aria-label="Refresh dashboard data">
-                            <flux:icon 
-                                name="arrow-path" 
-                                class="size-4"
-                                wire:loading.class="animate-spin"
-                                wire:target="refreshDashboard"
-                                aria-hidden="true"
-                            />
                             <span wire:loading.remove wire:target="refreshDashboard">Refresh</span>
                             <span wire:loading wire:target="refreshDashboard" aria-live="polite">Refreshing...</span>
                         </flux:button>
